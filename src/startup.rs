@@ -11,7 +11,7 @@ use tracing_actix_web::TracingLogger;
 pub fn run(listener: TcpListener, db_pool: PgPool) -> Result<Server, std::io::Error> {
     let db_pool = Data::new(db_pool);
     let port = listener.local_addr().unwrap().port();
-    
+
     // Log the server URL
     info!(
         "Server started! Access the web interface at http://localhost:{}",
@@ -26,7 +26,7 @@ pub fn run(listener: TcpListener, db_pool: PgPool) -> Result<Server, std::io::Er
                 web::scope("/api")
                     .route("/health_check", web::get().to(health_check))
                     .route("/subscriptions", web::post().to(subscribe))
-                    .app_data(db_pool.clone())
+                    .app_data(db_pool.clone()),
             )
             // Serve static files from the public directory
             .service(fs::Files::new("/", "./public").index_file("index.html"))
