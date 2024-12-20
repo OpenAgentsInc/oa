@@ -1,0 +1,143 @@
+:root {
+  --theme-success: #2ecc71;
+  --theme-success-subdued: #27ae60;
+  --theme-error: #e74c3c;
+  --theme-error-subdued: #c0392b;
+  --theme-border: #e0e0e0;
+  --theme-border-subdued: #bdc3c7;
+  --theme-line-height-base: 1.5;
+  --theme-font-family: 'JetBrains Mono', monospace;
+  --theme-text-color: #2c3e50;
+  --theme-background: #ffffff;
+  --theme-primary: #3498db;
+  --theme-primary-subdued: #2980b9;
+}
+
+/* AlertBanner Component */
+.alert-banner {
+  display: block;
+  background: var(--theme-border);
+  box-shadow: 1ch 1ch 0 0 var(--theme-border-subdued);
+  padding: calc(16px * var(--theme-line-height-base)) 2ch;
+  font-weight: 400;
+  font-family: var(--theme-font-family);
+}
+
+.alert-banner.success {
+  background: var(--theme-success);
+  box-shadow: 1ch 1ch 0 0 var(--theme-success-subdued);
+  color: white;
+}
+
+.alert-banner.error {
+  background: var(--theme-error);
+  box-shadow: 1ch 1ch 0 0 var(--theme-error-subdued);
+  color: white;
+}
+
+/* Button Component */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  font-family: var(--theme-font-family);
+  font-size: 1rem;
+  font-weight: 500;
+  border: 2px solid var(--theme-border);
+  background: var(--theme-background);
+  color: var(--theme-text-color);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.button:hover {
+  background: var(--theme-border);
+}
+
+.button.primary {
+  background: var(--theme-primary);
+  border-color: var(--theme-primary);
+  color: white;
+}
+
+.button.primary:hover {
+  background: var(--theme-primary-subdued);
+  border-color: var(--theme-primary-subdued);
+}
+
+/* Card Component */
+.card {
+  background: var(--theme-background);
+  border: 2px solid var(--theme-border);
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+.card-header {
+  margin-bottom: 1rem;
+  font-weight: bold;
+}
+
+.card-content {
+  margin-bottom: 1rem;
+}
+
+.card-footer {
+  border-top: 1px solid var(--theme-border);
+  padding-top: 1rem;
+}
+
+/* Text Component */
+.text {
+  font-family: var(--theme-font-family);
+  color: var(--theme-text-color);
+  margin: 0;
+}
+
+.text.h1 { font-size: 2rem; font-weight: 700; }
+.text.h2 { font-size: 1.5rem; font-weight: 600; }
+.text.h3 { font-size: 1.25rem; font-weight: 600; }
+.text.body { font-size: 1rem; }
+.text.small { font-size: 0.875rem; }
+
+/* TextArea Component */
+.textarea {
+  width: 100%;
+  min-height: 100px;
+  padding: 0.5rem;
+  font-family: var(--theme-font-family);
+  font-size: 1rem;
+  border: 2px solid var(--theme-border);
+  background: var(--theme-background);
+  color: var(--theme-text-color);
+  resize: vertical;
+}
+
+.textarea:focus {
+  outline: none;
+  border-color: var(--theme-primary);
+}
+
+/* DataTable Component */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--theme-font-family);
+}
+
+.data-table th,
+.data-table td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid var(--theme-border);
+}
+
+.data-table th {
+  font-weight: 600;
+  background: var(--theme-border);
+}
+
+.data-table tr:hover {
+  background: rgba(0, 0, 0, 0.02);
+}
