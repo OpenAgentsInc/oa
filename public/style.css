@@ -71,9 +71,9 @@ body {
 
 .logo {
     margin-top: 40px;
+    margin-bottom: 40px;
     width: auto;
-    height: 32px;
-    margin-bottom: 24px;
+    height: 50px;
 }
 
 .card-wrapper {
