@@ -60,6 +60,13 @@ body {
     overflow-y: auto;
 }
 
+.logo {
+    margin-top: 40px;
+    width: auto;
+    height: 32px;
+    pointer-events: auto;
+}
+
 .card-wrapper {
     width: 100%;
     max-width: 500px;
