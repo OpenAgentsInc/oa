@@ -17,6 +17,7 @@ body {
     align-items: center;
     overflow: hidden;
     position: fixed;
+    user-select: none;
 }
 
 #bg {
