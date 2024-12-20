@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="styles.css" />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <title>OpenAgents Components</title>
+</head>
+<body style="padding: 2rem; background: #f5f5f5;">
+  <div style="max-width: 800px; margin: 0 auto;">
+    <h1>Component Examples</h1>
+
+    <section style="margin: 2rem 0;">
+      <h2>Alert Banner</h2>
+      <alert-banner>Default Alert Banner</alert-banner>
+      <br>
+      <alert-banner type="success">Success Alert Banner</alert-banner>
+      <br>
+      <alert-banner type="error">Error Alert Banner</alert-banner>
+    </section>
+
+    <section style="margin: 2rem 0;">
+      <h2>Buttons</h2>
+      <custom-button>Default Button</custom-button>
+      <custom-button variant="primary">Primary Button</custom-button>
+    </section>
+
+    <section style="margin: 2rem 0;">
+      <h2>Card</h2>
+      <custom-card>
+        <div class="card-header">Card Title</div>
+        <div class="card-content">This is the card content.</div>
+        <div class="card-footer">
+          <custom-button variant="primary">Card Action</custom-button>
+        </div>
+      </custom-card>
+    </section>
+
+    <section style="margin: 2rem 0;">
+      <h2>Text</h2>
+      <custom-text variant="h1">Heading 1</custom-text>
+      <custom-text variant="h2">Heading 2</custom-text>
+      <custom-text variant="h3">Heading 3</custom-text>
+      <custom-text>Regular Body Text</custom-text>
+      <custom-text variant="small">Small Text</custom-text>
+    </section>
+
+    <section style="margin: 2rem 0;">
+      <h2>TextArea</h2>
+      <textarea is="custom-textarea" placeholder="Enter your text here..."></textarea>
+    </section>
+
+    <section style="margin: 2rem 0;">
+      <h2>DataTable</h2>
+      <table is="data-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Role</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>John Doe</td>
+            <td>Developer</td>
+            <td>Active</td>
+          </tr>
+          <tr>
+            <td>Jane Smith</td>
+            <td>Designer</td>
+            <td>Away</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </div>
+
+  <script src="components.js"></script>
+</body>
+</html>
