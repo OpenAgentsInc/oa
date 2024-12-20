@@ -6,6 +6,7 @@ Our main website & web app.
 
 - `cargo watch -x check`
 - `cargo watch -x check -x test -x run`
+- `docker build --tag oa .`
 
 ## Development Setup
 
