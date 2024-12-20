@@ -26,5 +26,6 @@ RUN apt-get update -y \
     && rm -rf /var/lib/apt/lists/*
 COPY --from=builder /app/target/release/oa oa
 COPY configuration configuration
+COPY public public
 ENV APP_ENVIRONMENT production
 ENTRYPOINT ["./oa"]
