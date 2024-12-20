@@ -84,15 +84,34 @@ body {
 
 .logo {
     margin-top: 40px;
+    margin-bottom: 20px;
     width: auto;
+<<<<<<< HEAD
     height: 32px;
     flex-shrink: 0;
+=======
+    height: 50px;
+    pointer-events: auto;
+>>>>>>> 567c0c8 (copy)
 }
 
 .card-wrapper {
     width: 100%;
     max-width: 500px;
+<<<<<<< HEAD
     flex-shrink: 0;
+=======
+    margin-bottom: 30px;
+    pointer-events: auto;
+}
+
+h1 {
+    font-size: 2rem;
+    font-weight: 400;
+    margin: 0;
+    opacity: 0;
+    animation: fadeIn 1s ease forwards;
+>>>>>>> 567c0c8 (copy)
 }
 
 .card {
