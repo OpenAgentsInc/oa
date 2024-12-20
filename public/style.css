@@ -47,54 +47,39 @@ body {
     margin: 2rem 0;
 }
 
-.product-card {
+.card {
     flex: 1;
     min-width: 300px;
     max-width: 400px;
-    background: rgba(24, 24, 27, 0.7) !important;
+    background: rgba(24, 24, 27, 0.7);
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(244, 244, 245, 0.1) !important;
 }
 
-.product-card .card-header {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: #f4f4f5;
-}
-
-.product-card .card-content {
-    color: #d4d4d8;
-}
-
-.product-card .feature-list {
+.card .feature-list {
     list-style: none;
     padding: 0;
     margin: 1rem 0;
     text-align: left;
 }
 
-.product-card .feature-list li {
+.card .feature-list li {
     margin: 0.5rem 0;
     padding-left: 1.5rem;
     position: relative;
     color: #a1a1aa;
 }
 
-.product-card .feature-list li::before {
+.card .feature-list li::before {
     content: "→";
     position: absolute;
     left: 0;
     color: #f4f4f5;
 }
 
-.product-card .card-footer {
-    border-color: rgba(244, 244, 245, 0.1);
-}
-
-.product-card custom-button {
-    display: block;
-    width: 100%;
-    box-sizing: border-box;
+.card p {
+    color: #d4d4d8;
+    margin: 0 0 1rem 0;
+    text-align: left;
 }
 
 @keyframes fadeIn {
