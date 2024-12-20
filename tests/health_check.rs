@@ -83,7 +83,7 @@ async fn health_check_works() {
     // Act
     let response = client
         // Use the returned application address
-        .get(&format!("{}/api/health_check", &app.address))
+        .get(&format!("{}/health_check", &app.address))
         .send()
         .await
         .expect("Failed to execute request.");
