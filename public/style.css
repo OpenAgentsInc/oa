@@ -10,8 +10,8 @@ body {
     height: 100%;
     width: 100%;
     font-family: 'JetBrains Mono', monospace;
-    background-color: #000000;
-    color: #ffffff;
+    background-color: #09090b;
+    color: #f4f4f5;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -36,6 +36,7 @@ body {
     width: 100%;
     max-width: 1200px;
     padding: 0 20px;
+    box-sizing: border-box;
 }
 
 .cards-container {
@@ -50,19 +51,19 @@ body {
     flex: 1;
     min-width: 300px;
     max-width: 400px;
-    background: rgba(0, 0, 0, 0.7) !important;
+    background: rgba(24, 24, 27, 0.7) !important;
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(244, 244, 245, 0.1) !important;
 }
 
 .product-card .card-header {
     font-size: 1.5rem;
     font-weight: 600;
-    color: #ffffff;
+    color: #f4f4f5;
 }
 
 .product-card .card-content {
-    color: #ffffff;
+    color: #d4d4d8;
 }
 
 .product-card .feature-list {
@@ -76,17 +77,24 @@ body {
     margin: 0.5rem 0;
     padding-left: 1.5rem;
     position: relative;
+    color: #a1a1aa;
 }
 
 .product-card .feature-list li::before {
     content: "→";
     position: absolute;
     left: 0;
-    color: var(--theme-primary);
+    color: #f4f4f5;
+}
+
+.product-card .card-footer {
+    border-color: rgba(244, 244, 245, 0.1);
 }
 
 .product-card custom-button {
+    display: block;
     width: 100%;
+    box-sizing: border-box;
 }
 
 @keyframes fadeIn {
