@@ -18,9 +18,6 @@ body {
     font-family: 'JetBrains Mono', monospace;
     background-color: #000000;
     color: #ffffff;
-    display: flex;
-    justify-content: center;
-    align-items: center;
     overflow: hidden;
     position: fixed;
     user-select: none;
@@ -36,13 +33,32 @@ body {
 }
 
 .container {
-    text-align: left;
-    position: relative;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
     z-index: 1;
+    pointer-events: none;
+}
+
+.card-wrapper {
+    position: absolute;
     width: 100%;
     max-width: 500px;
-    padding: 0 16px;
+    padding: 24px;
     box-sizing: border-box;
+    pointer-events: auto;
+}
+
+.top-left {
+    top: 0;
+    left: 0;
+}
+
+.bottom-right {
+    bottom: 0;
+    right: 0;
 }
 
 h1 {
@@ -114,6 +130,16 @@ h1 {
     margin: 0;
     line-height: 1;
     padding-bottom: 3px;
+}
+
+.card a {
+    color: var(--theme-text);
+    text-decoration: none;
+    border-bottom: 1px solid var(--theme-text);
+}
+
+.card a:hover {
+    opacity: 0.8;
 }
 
 @keyframes fadeIn {
