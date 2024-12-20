@@ -33,14 +33,60 @@ body {
     text-align: center;
     position: relative;
     z-index: 1;
+    width: 100%;
+    max-width: 1200px;
+    padding: 0 20px;
 }
 
-h1 {
-    font-size: 2rem;
-    font-weight: 400;
-    margin: 0;
-    opacity: 0;
-    animation: fadeIn 1s ease forwards;
+.cards-container {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+    margin: 2rem 0;
+}
+
+.product-card {
+    flex: 1;
+    min-width: 300px;
+    max-width: 400px;
+    background: rgba(0, 0, 0, 0.7) !important;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.product-card .card-header {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #ffffff;
+}
+
+.product-card .card-content {
+    color: #ffffff;
+}
+
+.product-card .feature-list {
+    list-style: none;
+    padding: 0;
+    margin: 1rem 0;
+    text-align: left;
+}
+
+.product-card .feature-list li {
+    margin: 0.5rem 0;
+    padding-left: 1.5rem;
+    position: relative;
+}
+
+.product-card .feature-list li::before {
+    content: "→";
+    position: absolute;
+    left: 0;
+    color: var(--theme-primary);
+}
+
+.product-card custom-button {
+    width: 100%;
 }
 
 @keyframes fadeIn {
