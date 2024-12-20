@@ -81,9 +81,9 @@ body {
     margin-bottom: 40px;
 }
 
-.card-wrapper:last-child {
+/* .card-wrapper:last-child {
     margin-bottom: 0;
-}
+} */
 
 .card {
     position: relative;
