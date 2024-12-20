@@ -1,15 +1,50 @@
 #!/bin/sh
 
-# Run cargo fmt
-echo "Running cargo fmt..."
-cargo fmt --all -- --check
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+NC='\033[0m' # No Color
 
-# Check if cargo fmt found any differences
+echo "Running pre-commit checks..."
+
+# Run cargo fmt
+echo "\n${GREEN}Running cargo fmt...${NC}"
+cargo fmt --all -- --check
 if [ $? -ne 0 ]; then
-    echo "Code formatting issues found. Running cargo fmt to fix..."
+    echo "${RED}Code formatting issues found. Running cargo fmt to fix...${NC}"
     cargo fmt --all
     git add .
-    echo "Formatted code has been staged."
+    echo "${GREEN}Formatted code has been staged.${NC}"
 fi
 
+# Run clippy
+echo "\n${GREEN}Running cargo clippy...${NC}"
+cargo clippy -- -D warnings
+if [ $? -ne 0 ]; then
+    echo "${RED}Clippy checks failed. Please fix the above issues and try again.${NC}"
+    exit 1
+fi
+
+# Run tests
+echo "\n${GREEN}Running cargo test...${NC}"
+cargo test
+if [ $? -ne 0 ]; then
+    echo "${RED}Tests failed. Please fix the failing tests and try again.${NC}"
+    exit 1
+fi
+
+# Run security audit if cargo-deny is installed
+if command -v cargo-deny >/dev/null 2>&1; then
+    echo "\n${GREEN}Running security audit...${NC}"
+    cargo deny check advisories
+    if [ $? -ne 0 ]; then
+        echo "${RED}Security audit failed. Please review the security advisories above.${NC}"
+        exit 1
+    fi
+else
+    echo "\n${RED}Warning: cargo-deny is not installed. Security audits will be skipped.${NC}"
+    echo "Install with: cargo install cargo-deny"
+fi
+
+echo "\n${GREEN}All checks passed!${NC}"
 exit 0
