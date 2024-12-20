@@ -1,4 +1,5 @@
 use crate::routes::{health_check, subscribe};
+use actix_files as fs;
 use actix_web::dev::Server;
 use actix_web::web::Data;
 use actix_web::{web, App, HttpServer};
@@ -11,8 +12,14 @@ pub fn run(listener: TcpListener, db_pool: PgPool) -> Result<Server, std::io::Er
     let server = HttpServer::new(move || {
         App::new()
             .wrap(TracingLogger::default())
-            .route("/health_check", web::get().to(health_check))
-            .route("/subscriptions", web::post().to(subscribe))
+            // Serve static files from the public directory
+            .service(fs::Files::new("/", "./public").index_file("index.html"))
+            // API routes
+            .service(
+                web::scope("/api")
+                    .route("/health_check", web::get().to(health_check))
+                    .route("/subscriptions", web::post().to(subscribe))
+            )
             .app_data(db_pool.clone())
     })
     .listen(listener)?
