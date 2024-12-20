@@ -65,7 +65,6 @@ h1 {
     padding: calc((var(--font-size) * 0.5) * var(--theme-line-height-base)) 2ch calc(var(--font-size) * var(--theme-line-height-base)) 2ch;
     overflow-x: auto;
     overflow-y: hidden;
-    margin-top: calc(var(--font-size) * -0.5);
 }
 
 .card-content::-webkit-scrollbar {
@@ -103,7 +102,7 @@ h1 {
     padding: 0 1ch;
     font-size: var(--font-size);
     font-weight: 400;
-    background: #000000;
+    padding-bottom: 3px;
     position: relative;
     top: 50%;
     margin: 0;
