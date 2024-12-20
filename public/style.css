@@ -47,40 +47,7 @@ body {
     margin: 2rem 0;
 }
 
-.card {
-    flex: 1;
-    min-width: 300px;
-    max-width: 400px;
-    background: rgba(24, 24, 27, 0.7);
-    backdrop-filter: blur(10px);
-}
-
-.card .feature-list {
-    list-style: none;
-    padding: 0;
-    margin: 1rem 0;
-    text-align: left;
-}
-
-.card .feature-list li {
-    margin: 0.5rem 0;
-    padding-left: 1.5rem;
-    position: relative;
-    color: #a1a1aa;
-}
-
-.card .feature-list li::before {
-    content: "→";
-    position: absolute;
-    left: 0;
-    color: #f4f4f5;
-}
-
-.card p {
-    color: #d4d4d8;
-    margin: 0 0 1rem 0;
-    text-align: left;
-}
+/* Remove all card styles from here - they're now in components/styles.css */
 
 @keyframes fadeIn {
     to {
