@@ -1,16 +1,16 @@
 :root {
-  --theme-success: #2ecc71;
-  --theme-success-subdued: #27ae60;
-  --theme-error: #e74c3c;
-  --theme-error-subdued: #c0392b;
-  --theme-border: #e0e0e0;
-  --theme-border-subdued: #bdc3c7;
+  --theme-success: #f4f4f5;
+  --theme-success-subdued: #e4e4e7;
+  --theme-error: #18181b;
+  --theme-error-subdued: #27272a;
+  --theme-border: #27272a;
+  --theme-border-subdued: #52525b;
   --theme-line-height-base: 1.5;
   --theme-font-family: 'JetBrains Mono', monospace;
-  --theme-text-color: #2c3e50;
-  --theme-background: #ffffff;
-  --theme-primary: #3498db;
-  --theme-primary-subdued: #2980b9;
+  --theme-text-color: #f4f4f5;
+  --theme-background: #18181b;
+  --theme-primary: #f4f4f5;
+  --theme-primary-subdued: #e4e4e7;
 }
 
 /* AlertBanner Component */
@@ -26,13 +26,13 @@
 .alert-banner.success {
   background: var(--theme-success);
   box-shadow: 1ch 1ch 0 0 var(--theme-success-subdued);
-  color: white;
+  color: #18181b;
 }
 
 .alert-banner.error {
   background: var(--theme-error);
   box-shadow: 1ch 1ch 0 0 var(--theme-error-subdued);
-  color: white;
+  color: #f4f4f5;
 }
 
 /* Button Component */
@@ -49,6 +49,8 @@
   color: var(--theme-text-color);
   cursor: pointer;
   transition: all 0.2s ease;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .button:hover {
@@ -58,7 +60,7 @@
 .button.primary {
   background: var(--theme-primary);
   border-color: var(--theme-primary);
-  color: white;
+  color: #18181b;
 }
 
 .button.primary:hover {
@@ -72,6 +74,7 @@
   border: 2px solid var(--theme-border);
   padding: 1rem;
   margin: 1rem 0;
+  box-sizing: border-box;
 }
 
 .card-header {
@@ -112,6 +115,7 @@
   background: var(--theme-background);
   color: var(--theme-text-color);
   resize: vertical;
+  box-sizing: border-box;
 }
 
 .textarea:focus {
@@ -139,5 +143,5 @@
 }
 
 .data-table tr:hover {
-  background: rgba(0, 0, 0, 0.02);
+  background: rgba(244, 244, 245, 0.02);
 }
