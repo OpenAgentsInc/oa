@@ -5,7 +5,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="components/styles.css" />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <title>OpenAgents</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.145.0/three.min.js"></script>
 </head>
@@ -13,8 +14,39 @@
 <body>
   <canvas id="bg"></canvas>
   <div class="container">
-    <h1>Coming soon</h1>
+    <div class="cards-container">
+      <custom-card class="product-card">
+        <div class="card-header">Onyx</div>
+        <div class="card-content">
+          <p>Experience the future of AI assistance with Onyx. Powered by advanced language models and equipped with real-time capabilities.</p>
+          <ul class="feature-list">
+            <li>Advanced AI Interactions</li>
+            <li>Real-time Processing</li>
+            <li>Seamless Integration</li>
+          </ul>
+        </div>
+        <div class="card-footer">
+          <custom-button variant="primary">Learn More</custom-button>
+        </div>
+      </custom-card>
+
+      <custom-card class="product-card">
+        <div class="card-header">Business Pro</div>
+        <div class="card-content">
+          <p>Enterprise-grade AI solutions designed for professional environments. Scale your operations with powerful AI tools.</p>
+          <ul class="feature-list">
+            <li>Enterprise Integration</li>
+            <li>Advanced Security</li>
+            <li>24/7 Support</li>
+          </ul>
+        </div>
+        <div class="card-footer">
+          <custom-button variant="primary">Contact Sales</custom-button>
+        </div>
+      </custom-card>
+    </div>
   </div>
+  <script src="components/components.js"></script>
   <script src="js/OnyxOrb.js"></script>
   <script src="js/LightingSystem.js"></script>
   <script src="js/ViewSystem.js"></script>
