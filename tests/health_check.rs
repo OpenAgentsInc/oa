@@ -59,7 +59,7 @@ pub async fn configure_database(config: &DatabaseSettings) -> PgPool {
         .await
         .expect("Failed to connect to Postgres");
     connection
-        .execute(format!(r#"CREATE DATABASE "{}";"#, config.database_name).as_str())
+        .execute(format!(r#"CREATE DATABASE "{}""#, config.database_name).as_str())
         .await
         .expect("Failed to create database.");
 
@@ -83,7 +83,7 @@ async fn health_check_works() {
     // Act
     let response = client
         // Use the returned application address
-        .get(&format!("{}/health_check", &app.address))
+        .get(&format!("{}/api/health_check", &app.address))
         .send()
         .await
         .expect("Failed to execute request.");
@@ -102,7 +102,7 @@ async fn subscribe_returns_a_200_for_valid_form_data() {
 
     // Act
     let response = client
-        .post(&format!("{}/subscriptions", &app.address))
+        .post(&format!("{}/api/subscriptions", &app.address))
         .header("Content-Type", "application/x-www-form-urlencoded")
         .body(body)
         .send()
@@ -135,7 +135,7 @@ async fn subscribe_returns_a_400_when_data_is_missing() {
     for (invalid_body, error_message) in test_cases {
         // Act
         let response = client
-            .post(&format!("{}/subscriptions", &app.address))
+            .post(&format!("{}/api/subscriptions", &app.address))
             .header("Content-Type", "application/x-www-form-urlencoded")
             .body(invalid_body)
             .send()

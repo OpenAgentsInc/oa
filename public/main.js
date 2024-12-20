@@ -1,0 +1,1 @@
+// The animation is now handled by CSS
