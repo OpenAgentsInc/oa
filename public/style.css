@@ -1,17 +1,22 @@
-html, body {
+html {
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+}
+
+body {
     margin: 0;
     padding: 0;
     height: 100%;
     width: 100%;
-}
-
-body {
     font-family: 'JetBrains Mono', monospace;
     background-color: #000000;
     color: #ffffff;
     display: flex;
     justify-content: center;
     align-items: center;
+    overflow: hidden;
+    position: fixed;
 }
 
 .container {
