@@ -1,0 +1,15 @@
+#!/bin/sh
+
+# Run cargo fmt
+echo "Running cargo fmt..."
+cargo fmt --all -- --check
+
+# Check if cargo fmt found any differences
+if [ $? -ne 0 ]; then
+    echo "Code formatting issues found. Running cargo fmt to fix..."
+    cargo fmt --all
+    git add .
+    echo "Formatted code has been staged."
+fi
+
+exit 0
