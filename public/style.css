@@ -18,7 +18,6 @@ body {
     background-color: #000000;
     color: #ffffff;
     position: fixed;
-    user-select: none;
 }
 
 #bg {
