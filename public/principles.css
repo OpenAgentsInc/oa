@@ -32,10 +32,9 @@
     padding: 0;
 }
 
-/* Fix the center card content styling */
+/* Match the main card styling exactly */
 .center-card .card-content {
-    margin-top: 0;
-    padding-top: 16px;
+    margin-top: calc(var(--font-size) * -0.5);
     box-shadow:
         inset 1px 0 0 0 var(--theme-text),
         inset -1px 0 0 0 var(--theme-text),
