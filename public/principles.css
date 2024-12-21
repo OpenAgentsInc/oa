@@ -32,9 +32,14 @@
     padding: 0;
 }
 
-/* Remove the extra border from center card content */
+/* Remove the internal border under title for center card */
 .center-card .card-content {
-    box-shadow: none;
+    margin-top: 0;
+    border-top: none;
+    box-shadow:
+        inset 1px 0 0 0 var(--theme-text),
+        inset -1px 0 0 0 var(--theme-text),
+        0 1px 0 0 var(--theme-text);
 }
 
 .top-left {
