@@ -32,26 +32,27 @@
     padding: 0;
 }
 
-/* Match the main card styling exactly */
-.center-card .card-content {
+/* Override the base styles with more specific selectors */
+.principles-container .center-card .card .card-left {
+    box-shadow:
+        inset 1px 0 0 0 var(--theme-text),
+        inset 0 1px 0 0 var(--theme-text);
+    padding: calc((var(--font-size) * 0.5) * var(--theme-line-height-base)) 2ch 0 1ch;
+}
+
+.principles-container .center-card .card .card-right {
+    box-shadow:
+        inset -1px 0 0 0 var(--theme-text),
+        inset 0 1px 0 0 var(--theme-text);
+    padding: calc((var(--font-size) * 0.5) * var(--theme-line-height-base)) 2ch 0 1ch;
+}
+
+.principles-container .center-card .card .card-content {
     margin-top: calc(var(--font-size) * -0.5);
     box-shadow:
         inset 1px 0 0 0 var(--theme-text),
         inset -1px 0 0 0 var(--theme-text),
         0 1px 0 0 var(--theme-text);
-}
-
-/* Fix the header borders for center card */
-.center-card .card-left {
-    box-shadow:
-        inset 1px 0 0 0 var(--theme-text),
-        inset 0 1px 0 0 var(--theme-text);
-}
-
-.center-card .card-right {
-    box-shadow:
-        inset -1px 0 0 0 var(--theme-text),
-        inset 0 1px 0 0 var(--theme-text);
 }
 
 .top-left {
