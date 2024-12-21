@@ -32,22 +32,16 @@
     padding: 0;
 }
 
-/* Override the base styles with more specific selectors */
-.principles-container .center-card .card .card-left {
-    box-shadow:
-        inset 1px 0 0 0 var(--theme-text),
-        inset 0 1px 0 0 var(--theme-text);
-    padding: calc((var(--font-size) * 0.5) * var(--theme-line-height-base)) 2ch 0 1ch;
+/* Force override any box-shadow styles */
+.principles-container .center-card .card-left {
+    box-shadow: inset 1px 0 0 0 var(--theme-text), inset 0 1px 0 0 var(--theme-text) !important;
 }
 
-.principles-container .center-card .card .card-right {
-    box-shadow:
-        inset -1px 0 0 0 var(--theme-text),
-        inset 0 1px 0 0 var(--theme-text);
-    padding: calc((var(--font-size) * 0.5) * var(--theme-line-height-base)) 2ch 0 1ch;
+.principles-container .center-card .card-right {
+    box-shadow: inset -1px 0 0 0 var(--theme-text), inset 0 1px 0 0 var(--theme-text) !important;
 }
 
-.principles-container .center-card .card .card-content {
+.principles-container .center-card .card-content {
     margin-top: calc(var(--font-size) * -0.5);
     box-shadow:
         inset 1px 0 0 0 var(--theme-text),
