@@ -43,11 +43,15 @@
 
 /* Fix the header borders for center card */
 .center-card .card-left {
-    box-shadow: inset 1px 0 0 0 var(--theme-text);
+    box-shadow:
+        inset 1px 0 0 0 var(--theme-text),
+        inset 0 1px 0 0 var(--theme-text);
 }
 
 .center-card .card-right {
-    box-shadow: inset -1px 0 0 0 var(--theme-text);
+    box-shadow:
+        inset -1px 0 0 0 var(--theme-text),
+        inset 0 1px 0 0 var(--theme-text);
 }
 
 .top-left {
