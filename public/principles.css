@@ -7,6 +7,9 @@
     z-index: 1;
     padding: 20px;
     box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .corner-card {
@@ -20,11 +23,7 @@
 }
 
 .center-card {
-    position: absolute;
     width: 400px;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
 }
 
 .center-card .card {
@@ -75,12 +74,7 @@
     }
     
     .center-card {
-        position: relative;
         width: calc(100% - 40px);
-        transform: none;
-        left: auto;
-        top: auto;
-        margin: 20px auto;
     }
 }
 
@@ -89,6 +83,7 @@
         position: static;
         padding: 10px;
         overflow-y: auto;
+        display: block;
     }
     
     .corner-card, .center-card {
@@ -99,6 +94,5 @@
         left: auto;
         right: auto;
         bottom: auto;
-        transform: none;
     }
 }
