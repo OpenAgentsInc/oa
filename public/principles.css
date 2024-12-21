@@ -7,16 +7,45 @@
     z-index: 1;
     padding: 20px;
     box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .corner-card {
     position: absolute;
-    width: 300px;
+    width: 400px;
 }
 
 .corner-card .card {
     margin: 0;
     padding: 0;
+}
+
+.center-card {
+    width: 400px;
+}
+
+.center-card .card {
+    margin: 0;
+    padding: 0;
+}
+
+/* Force override any box-shadow styles */
+.principles-container .center-card .card-left {
+    box-shadow: inset 1px 0 0 0 var(--theme-text), inset 0 1px 0 0 var(--theme-text) !important;
+}
+
+.principles-container .center-card .card-right {
+    box-shadow: inset -1px 0 0 0 var(--theme-text), inset 0 1px 0 0 var(--theme-text) !important;
+}
+
+.principles-container .center-card .card-content {
+    margin-top: calc(var(--font-size) * -0.5);
+    box-shadow:
+        inset 1px 0 0 0 var(--theme-text),
+        inset -1px 0 0 0 var(--theme-text),
+        0 1px 0 0 var(--theme-text);
 }
 
 .top-left {
@@ -40,8 +69,12 @@
 }
 
 @media (max-width: 1024px) {
-    .corner-card {
+    .corner-card, .center-card {
         width: calc(50% - 30px);
+    }
+    
+    .center-card {
+        width: calc(100% - 40px);
     }
 }
 
@@ -50,9 +83,10 @@
         position: static;
         padding: 10px;
         overflow-y: auto;
+        display: block;
     }
     
-    .corner-card {
+    .corner-card, .center-card {
         position: relative;
         width: 100%;
         margin-bottom: 20px;

@@ -99,7 +99,8 @@ body {
         inset -1px 0 0 0 var(--theme-text),
         0 1px 0 0 var(--theme-text);
     display: block;
-    padding: calc((var(--font-size) * 0.5) * var(--theme-line-height-base)) 2ch calc(var(--font-size) * var(--theme-line-height-base)) 2ch;
+    /* padding: calc((var(--font-size) * 0.5) * var(--theme-line-height-base)) 2ch calc(var(--font-size) * var(--theme-line-height-base)) 2ch; */
+    padding: 16px 36px;
     overflow-x: auto;
     overflow-y: hidden;
     margin-top: calc(var(--font-size) * -0.5);
