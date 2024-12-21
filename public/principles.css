@@ -32,10 +32,10 @@
     padding: 0;
 }
 
-/* Remove the internal border under title for center card */
+/* Fix the center card content styling */
 .center-card .card-content {
     margin-top: 0;
-    border-top: none;
+    padding-top: 16px;
     box-shadow:
         inset 1px 0 0 0 var(--theme-text),
         inset -1px 0 0 0 var(--theme-text),
