@@ -1,0 +1,64 @@
+.principles-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.corner-card {
+    position: absolute;
+    width: 300px;
+}
+
+.corner-card .card {
+    margin: 0;
+    padding: 0;
+}
+
+.top-left {
+    top: 20px;
+    left: 20px;
+}
+
+.top-right {
+    top: 20px;
+    right: 20px;
+}
+
+.bottom-left {
+    bottom: 20px;
+    left: 20px;
+}
+
+.bottom-right {
+    bottom: 20px;
+    right: 20px;
+}
+
+@media (max-width: 1024px) {
+    .corner-card {
+        width: calc(50% - 30px);
+    }
+}
+
+@media (max-width: 640px) {
+    .principles-container {
+        position: static;
+        padding: 10px;
+        overflow-y: auto;
+    }
+    
+    .corner-card {
+        position: relative;
+        width: 100%;
+        margin-bottom: 20px;
+        top: auto;
+        left: auto;
+        right: auto;
+        bottom: auto;
+    }
+}
