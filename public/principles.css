@@ -19,6 +19,19 @@
     padding: 0;
 }
 
+.center-card {
+    position: absolute;
+    width: 300px;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.center-card .card {
+    margin: 0;
+    padding: 0;
+}
+
 .top-left {
     top: 20px;
     left: 20px;
@@ -40,8 +53,17 @@
 }
 
 @media (max-width: 1024px) {
-    .corner-card {
+    .corner-card, .center-card {
         width: calc(50% - 30px);
+    }
+    
+    .center-card {
+        position: relative;
+        width: calc(100% - 40px);
+        transform: none;
+        left: auto;
+        top: auto;
+        margin: 20px auto;
     }
 }
 
@@ -52,7 +74,7 @@
         overflow-y: auto;
     }
     
-    .corner-card {
+    .corner-card, .center-card {
         position: relative;
         width: 100%;
         margin-bottom: 20px;
@@ -60,5 +82,6 @@
         left: auto;
         right: auto;
         bottom: auto;
+        transform: none;
     }
 }
