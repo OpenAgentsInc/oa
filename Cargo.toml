@@ -13,6 +13,7 @@ name = "oa"
 
 [dependencies]
 actix-web = "4"
+actix-http = "3.0"
 actix-files = "0.6"
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 serde = { version = "1.0.115", features = ["derive"] }
