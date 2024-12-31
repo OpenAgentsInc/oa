@@ -23,6 +23,22 @@ if [ ! -f "$CHANGES_HISTORY_FILE" ]; then
     echo "{}" > "$CHANGES_HISTORY_FILE"
 fi
 
+# Function to get previous changes for a file
+get_previous_changes() {
+    local file="$1"
+    local changes=""
+    if [ -f "$LOG_FILE" ]; then
+        changes=$(awk -v file="$file" '
+            $0 ~ "### Analyzing " file "..." { in_section=1; next }
+            in_section && /^```diff$/ { in_diff=1; next }
+            in_section && /^```$/ { in_diff=0; next }
+            in_section && in_diff { print }
+            /^### Analyzing/ { in_section=0 }
+        ' "$LOG_FILE")
+    fi
+    echo "$changes"
+}
+
 # Function to check if a change has been tried before
 was_tried_before() {
     local file="$1"
@@ -157,6 +173,7 @@ Return ONLY a JSON array of file paths that need to be examined to fix these err
         fi
         
         file_content=$(cat "$file")
+        previous_changes=$(get_previous_changes "$file")
         
         # Check if file needs changes
         echo "Analyzing file for changes..." | tee -a "$LOG_FILE"
@@ -169,15 +186,21 @@ $file_content
 Test failures:
 $error_output
 
+Previous changes that did not fix the issue:
+$previous_changes
+
 Project context:
 - The project root contains a 'migrations' folder with SQL files
 - File paths in include_str! macros are relative to the current file
 - Previous changes to this file have not fixed the issue
+- The migrations folder is at the same level as the src folder
 
 IMPORTANT: Your response MUST start with either:
 1. 'NO_CHANGES_NEEDED' if this file does not need changes to fix the failing tests
 2. 'CHANGES:' followed by the complete new file content if changes are needed
 
+Consider the previous failed changes when suggesting new changes.
+Do not repeat changes that didn't work before.
 Do not explain or add any other text. Just start with one of those two options.")
         
         # Debug the response
@@ -200,7 +223,13 @@ Do not explain or add any other text. Just start with one of those two options."
             fi
             
             # Get explanation
-            explanation=$(call_deepseek "Explain in one line what changes were made to $file and why they fix the failing tests.")
+            explanation=$(call_deepseek "Given these test failures:
+$error_output
+
+And these previous failed changes:
+$previous_changes
+
+Explain in one line what NEW changes were made to $file and why they will fix the failing tests differently than previous attempts.")
             
             echo "🔨 FIXING: $explanation" | tee -a "$LOG_FILE"
             
