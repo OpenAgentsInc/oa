@@ -15,7 +15,7 @@ fi
 
 # Initialize log file
 mkdir -p docs
-echo -e "# Deepseek Test Fixer Log\n\n" > "$LOG_FILE"
+echo -e "# Deepseek Test Fixer Log\n\nStarted analysis at $(date '+%Y-%m-%d %H:%M:%S')\n" > "$LOG_FILE"
 
 # Function to extract relevant error messages
 extract_errors() {
@@ -70,6 +70,7 @@ iteration=1
 
 while [ $iteration -le $MAX_ITERATIONS ]; do
     echo -e "\n=== Iteration $iteration of $MAX_ITERATIONS ===\n"
+    echo -e "\n## Iteration $iteration of $MAX_ITERATIONS\n" >> "$LOG_FILE"
     
     # Run tests
     echo "Running tests..."
@@ -81,6 +82,7 @@ while [ $iteration -le $MAX_ITERATIONS ]; do
     
     if [ $test_exit_code -eq 0 ]; then
         echo "All tests passing! Exiting..."
+        echo "\n✅ All tests passing!" >> "$LOG_FILE"
         exit 0
     fi
 
@@ -117,13 +119,17 @@ Return ONLY a JSON array of file paths that need to be examined to fix these err
     fi
 
     echo -e "\nFiles to examine: ${files_array[*]}"
+    echo -e "\nExamining files: ${files_array[*]}\n" >> "$LOG_FILE"
+    
+    changes_made=0
     
     # Process each file
     for file in "${files_array[@]}"; do
+        echo -e "\n### Analyzing $file...\n" >> "$LOG_FILE"
         echo -e "\nAnalyzing $file..."
         
         if [ ! -f "$file" ]; then
-            echo "File $file not found, skipping..."
+            echo "❌ File $file not found, skipping..." | tee -a "$LOG_FILE"
             continue
         fi
         
@@ -144,7 +150,7 @@ Does this file need changes to fix the failing tests? If yes, provide the comple
 Format your response to start with either 'CHANGES:' followed by the new content, or 'NO_CHANGES_NEEDED'.")
         
         if [[ "$response" == NO_CHANGES_NEEDED* ]]; then
-            echo "No changes needed for $file"
+            echo "✓ No changes needed for $file" | tee -a "$LOG_FILE"
             continue
         fi
         
@@ -155,12 +161,10 @@ Format your response to start with either 'CHANGES:' followed by the new content
             # Get explanation
             explanation=$(call_deepseek "Explain in one line what changes were made to $file and why they fix the failing tests.")
             
-            echo "Making changes to $file: $explanation"
+            echo "🔨 Making changes to $file: $explanation" | tee -a "$LOG_FILE"
             
             # Log changes
             {
-                echo -e "\n## $(date '+%Y-%m-%d %H:%M:%S')\n"
-                echo "File: $file"
                 echo "Changes: $explanation"
                 echo '```diff'
                 diff -u "$file" <(echo "$new_content") || true
@@ -173,12 +177,29 @@ Format your response to start with either 'CHANGES:' followed by the new content
             git add "$file" "$LOG_FILE"
             git commit -m "fix($file): $explanation" -n
             
-            echo "Changes logged to $LOG_FILE"
+            ((changes_made++))
+            echo "✅ Changes committed and logged to $LOG_FILE"
         fi
     done
+    
+    echo -e "\nIteration $iteration summary:" | tee -a "$LOG_FILE"
+    echo "- Files examined: ${#files_array[@]}" | tee -a "$LOG_FILE"
+    echo "- Changes made: $changes_made" | tee -a "$LOG_FILE"
+    echo "- Tests still failing: $test_exit_code" | tee -a "$LOG_FILE"
+    echo
+    
+    if [ $changes_made -eq 0 ]; then
+        echo "⚠️ WARNING: No changes were made this iteration!" | tee -a "$LOG_FILE"
+        echo "This could mean:"
+        echo "1. The AI failed to identify necessary changes"
+        echo "2. The errors are in dependencies or configuration"
+        echo "3. The errors require manual intervention"
+    fi
     
     ((iteration++))
 done
 
-echo "Maximum iterations reached. Some tests may still be failing."
+echo -e "\n## Final Status\n" >> "$LOG_FILE"
+echo "Maximum iterations reached. Some tests may still be failing." | tee -a "$LOG_FILE"
+echo "Review the changes in $LOG_FILE for details." | tee -a "$LOG_FILE"
 exit 1
