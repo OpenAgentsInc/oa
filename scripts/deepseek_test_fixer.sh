@@ -93,9 +93,18 @@ Return ONLY a JSON array of file paths that need to be examined to fix these err
         ((iteration++))
         continue
     fi
+
+    # Try to parse as JSON array, if fails use default files
+    if ! files_array=($(echo "$files_to_check" | jq -r '.[]' 2>/dev/null)); then
+        echo "Failed to parse JSON array, using files from error messages..."
+        # Extract files from error messages
+        files_array=($(echo "$error_output" | grep -o 'src/[^:]*' | sort -u))
+    fi
+
+    echo -e "\nFiles to examine: ${files_array[*]}"
     
-    # Process each file from the JSON array
-    for file in $(echo "$files_to_check" | jq -r '.[]'); do
+    # Process each file
+    for file in "${files_array[@]}"; do
         echo -e "\nAnalyzing $file..."
         
         if [ ! -f "$file" ]; then
