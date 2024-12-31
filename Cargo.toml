@@ -45,11 +45,8 @@ parse_duration = "2"
 prometheus = "0.13.3"
 prost = "0.11"
 qrcode = { version = "0.12.0", default-features = false, features = ["svg"] }
-r2d2 = "0.8"
-r2d2_sqlite = "0.19"
 rand = "0.8"
 regex = "1"
-rusqlite = { version = "0.26", features = ["limits", "bundled", "modern_sqlite", "trace"] }
 secrecy = { version = "0.8", features = ["serde"] }
 secp256k1 = { version = "0.21", features = ["rand", "rand-std", "serde", "bitcoin_hashes"] }
 serde = { version = "1.0.115", features = ["derive"] }
@@ -59,6 +56,7 @@ sqlx = { version = "0.8", default-features = false, features = [
     "runtime-tokio-rustls",
     "macros",
     "postgres",
+    "sqlite",
     "uuid",
     "chrono",
     "migrate",
