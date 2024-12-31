@@ -1,5 +1,4 @@
-
-pub mod account;
+ pub mod account;
 pub mod event;
 pub mod invoice;
 pub mod query;
