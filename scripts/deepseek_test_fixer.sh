@@ -38,7 +38,7 @@ call_deepseek() {
         -H "Content-Type: application/json" \
         -H "Authorization: Bearer $DEEPSEEK_API_KEY" \
         -d "{
-            \"model\": \"deepseek-coder-33b-instruct\",
+            \"model\": \"deepseek-chat\",
             \"messages\": [{\"role\": \"user\", \"content\": $(echo "$prompt" | jq -R -s '.')}],
             \"temperature\": 0.1,
             \"max_tokens\": 4000
