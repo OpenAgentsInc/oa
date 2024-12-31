@@ -52,5 +52,10 @@
     ├── startup.rs
     ├── telemetry.rs
   ├── tests
+    ├── cli.rs
+    ├── common
+      ├── mod.rs
+    ├── conn.rs
     ├── health_check.rs
+    ├── integration_test.rs
 ```
