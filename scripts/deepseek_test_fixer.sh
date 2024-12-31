@@ -125,8 +125,7 @@ Return ONLY a JSON array of file paths that need to be examined to fix these err
     
     # Process each file
     for file in "${files_array[@]}"; do
-        echo -e "\n### Analyzing $file...\n" >> "$LOG_FILE"
-        echo -e "\nAnalyzing $file..."
+        echo -e "\n### Analyzing $file..." | tee -a "$LOG_FILE"
         
         if [ ! -f "$file" ]; then
             echo "❌ File $file not found, skipping..." | tee -a "$LOG_FILE"
@@ -136,7 +135,6 @@ Return ONLY a JSON array of file paths that need to be examined to fix these err
         file_content=$(cat "$file")
         
         # Check if file needs changes
-        echo "Checking if $file needs changes..."
         response=$(call_deepseek "You are a Rust expert. Given this file:
 
 $file_content
@@ -150,7 +148,7 @@ Does this file need changes to fix the failing tests? If yes, provide the comple
 Format your response to start with either 'CHANGES:' followed by the new content, or 'NO_CHANGES_NEEDED'.")
         
         if [[ "$response" == NO_CHANGES_NEEDED* ]]; then
-            echo "✓ No changes needed for $file" | tee -a "$LOG_FILE"
+            echo "✓ SKIPPING: No changes needed" | tee -a "$LOG_FILE"
             continue
         fi
         
@@ -161,11 +159,11 @@ Format your response to start with either 'CHANGES:' followed by the new content
             # Get explanation
             explanation=$(call_deepseek "Explain in one line what changes were made to $file and why they fix the failing tests.")
             
-            echo "🔨 Making changes to $file: $explanation" | tee -a "$LOG_FILE"
+            echo "🔨 FIXING: $explanation" | tee -a "$LOG_FILE"
             
             # Log changes
             {
-                echo "Changes: $explanation"
+                echo "Changes:"
                 echo '```diff'
                 diff -u "$file" <(echo "$new_content") || true
                 echo '```'
@@ -178,7 +176,9 @@ Format your response to start with either 'CHANGES:' followed by the new content
             git commit -m "fix($file): $explanation" -n
             
             ((changes_made++))
-            echo "✅ Changes committed and logged to $LOG_FILE"
+            echo "✅ Changes committed" | tee -a "$LOG_FILE"
+        else
+            echo "⚠️ ERROR: Unexpected response from AI" | tee -a "$LOG_FILE"
         fi
     done
     
