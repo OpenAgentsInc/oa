@@ -24,7 +24,17 @@ extract_errors() {
 
 # Function to extract files from error messages
 extract_files() {
-    echo "$1" | grep -o 'src/[^:]*' | sort -u || true
+    local input="$1"
+    local files=""
+    while IFS= read -r line; do
+        if [[ $line =~ src/[^:]*\.rs ]]; then
+            file="${BASH_REMATCH[0]}"
+            if [[ ! $files =~ $file ]]; then
+                files="$files $file"
+            fi
+        fi
+    done <<< "$input"
+    echo "$files"
 }
 
 # Function to call Deepseek API
@@ -68,19 +78,10 @@ while [ $iteration -le $MAX_ITERATIONS ]; do
     
     # Process test results
     error_output=$(extract_errors "$test_output")
-    if [ -n "$error_output" ]; then
-        echo "Found test errors:"
-        echo "$error_output"
-    fi
     
     if [ $test_exit_code -eq 0 ]; then
         echo "All tests passing! Exiting..."
         exit 0
-    fi
-
-    if [ -z "$error_output" ]; then
-        echo "No error output found but tests failed. Using full test output..."
-        error_output="$test_output"
     fi
 
     # Get project hierarchy
@@ -99,15 +100,15 @@ Return ONLY a JSON array of file paths that need to be examined to fix these err
 
     # Parse files or fallback to error messages
     if echo "$files_json" | jq -e 'if type=="array" then true else false end' >/dev/null 2>&1; then
-        readarray -t files_array < <(echo "$files_json" | jq -r '.[]')
+        files_array=($(echo "$files_json" | jq -r '.[]'))
     else
         echo "Using files from error messages..."
-        readarray -t files_array < <(extract_files "$error_output")
+        files_array=($(extract_files "$error_output"))
     fi
 
     if [ ${#files_array[@]} -eq 0 ]; then
         echo "No files found in errors, checking full output..."
-        readarray -t files_array < <(extract_files "$test_output")
+        files_array=($(extract_files "$test_output"))
         
         if [ ${#files_array[@]} -eq 0 ]; then
             echo "No files found. Examining default locations..."
@@ -171,6 +172,8 @@ Format your response to start with either 'CHANGES:' followed by the new content
             echo "$new_content" > "$file"
             git add "$file" "$LOG_FILE"
             git commit -m "fix($file): $explanation" -n
+            
+            echo "Changes logged to $LOG_FILE"
         fi
     done
     
