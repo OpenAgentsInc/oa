@@ -50,9 +50,8 @@ MAX_ITERATIONS=5
 iteration=1
 
 # Set required environment variables and create directories
-export OUT_DIR="src/target/out"
+export OUT_DIR="target/out"
 mkdir -p "$OUT_DIR"
-mkdir -p "src/target/out"
 
 # First, try to fix the nauthz.rs issue
 if [ ! -f "$OUT_DIR/nauthz.rs" ]; then
@@ -78,14 +77,6 @@ while [ $iteration -le $MAX_ITERATIONS ]; do
     if [ $test_exit_code -eq 0 ]; then
         echo "All tests passing! Exiting..."
         exit 0
-    fi
-
-    # Special handling for nauthz.rs error
-    if echo "$error_output" | grep -q "couldn't read.*nauthz.rs"; then
-        echo "Detected nauthz.rs error, creating necessary directories..."
-        mkdir -p "src/target/out"
-        touch "src/target/out/nauthz.rs"
-        continue
     fi
 
     # Get hierarchy content
