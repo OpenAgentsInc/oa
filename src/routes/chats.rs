@@ -2,6 +2,7 @@ use actix_web::{web, HttpResponse, HttpMessage, error::ParseError};
 use serde::Deserialize;
 use actix_web::http::header::{self, HeaderValue, TryIntoHeaderValue};
 use std::fmt;
+use actix_http::error::HttpError;
 
 #[derive(Deserialize)]
 pub struct ShareRequest {
@@ -37,11 +38,11 @@ impl fmt::Display for NostrPubkey {
 }
 
 impl TryIntoHeaderValue for NostrPubkey {
-    type Error = actix_web::error::ParseError;
+    type Error = HttpError;
 
     fn try_into_value(self) -> Result<HeaderValue, Self::Error> {
         HeaderValue::from_str(&self.0)
-            .map_err(|_| ParseError::Header)
+            .map_err(|e| e.into())
     }
 }
 
