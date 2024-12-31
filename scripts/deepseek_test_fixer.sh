@@ -32,7 +32,8 @@ echo "Updating hierarchy..."
 
 # Function to capture test output and errors
 run_tests() {
-    cargo test 2>&1
+    cargo test
+    return $?
 }
 
 # Main loop
@@ -43,8 +44,15 @@ while [ $iteration -le $MAX_ITERATIONS ]; do
     echo "Iteration $iteration of $MAX_ITERATIONS"
     
     # Run tests and capture output
-    test_output=$(run_tests)
-    if ! echo "$test_output" | grep -q "test result: FAILED"; then
+    echo "Running tests..."
+    test_output=$(cargo test 2>&1)
+    test_exit_code=$?
+    
+    echo "Test output:"
+    echo "$test_output"
+    echo "Test exit code: $test_exit_code"
+    
+    if [ $test_exit_code -eq 0 ]; then
         echo "All tests passing! Exiting..."
         exit 0
     fi
@@ -55,7 +63,9 @@ while [ $iteration -le $MAX_ITERATIONS ]; do
     # Ask Deepseek for files to examine
     prompt="Given these test failures:\n$test_output\n\nAnd this project hierarchy:\n$hierarchy_content\n\nReturn a JSON array of file paths that are most likely to need examination to fix these failing tests. Format: [\"path/to/file1.rs\", \"path/to/file2.rs\"]"
     
+    echo "Asking Deepseek for files to examine..."
     files_to_check=$(call_deepseek "$prompt")
+    echo "Deepseek suggested files: $files_to_check"
     
     # Remove brackets and quotes, split into array
     files_array=($(echo "$files_to_check" | tr -d '[]"' | tr ',' '\n'))
@@ -74,7 +84,9 @@ while [ $iteration -le $MAX_ITERATIONS ]; do
         # Ask Deepseek if file needs changes
         prompt="Given this file content:\n$file_content\n\nAnd these test failures:\n$test_output\n\nDoes this file need changes to fix the failing tests? If yes, provide the complete updated file content. If no, respond with 'NO_CHANGES_NEEDED'. Format your response to start with either 'CHANGES:' followed by the new content, or 'NO_CHANGES_NEEDED'"
         
+        echo "Asking Deepseek if file needs changes..."
         response=$(call_deepseek "$prompt")
+        echo "Deepseek response starts with: ${response:0:50}..."
         
         if [[ $response == NO_CHANGES_NEEDED* ]]; then
             echo "No changes needed for $file"
@@ -88,6 +100,8 @@ while [ $iteration -le $MAX_ITERATIONS ]; do
             # Get explanation from Deepseek
             prompt="Explain the changes you just suggested for $file in one line"
             explanation=$(call_deepseek "$prompt")
+            
+            echo "Deepseek suggested changes with explanation: $explanation"
             
             # Log the changes
             echo -e "\n## $(date '+%Y-%m-%d %H:%M:%S')\n" >> "$LOG_FILE"
@@ -104,8 +118,15 @@ while [ $iteration -le $MAX_ITERATIONS ]; do
     done
     
     # Run tests again to check progress
-    test_output=$(run_tests)
-    if ! echo "$test_output" | grep -q "test result: FAILED"; then
+    echo "Running tests again..."
+    test_output=$(cargo test 2>&1)
+    test_exit_code=$?
+    
+    echo "Test output:"
+    echo "$test_output"
+    echo "Test exit code: $test_exit_code"
+    
+    if [ $test_exit_code -eq 0 ]; then
         echo "All tests passing! Exiting..."
         exit 0
     fi
