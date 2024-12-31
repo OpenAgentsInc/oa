@@ -30,7 +30,7 @@ impl RateLimiter {
         if let Some(ref lim) = self.limiter {
             if let Err(n) = lim.check() {
                 let wait_for = n.wait_time_from(self.clock.now());
-                
+
                 // Log rate limit message once per 10 seconds
                 if self.most_recent_rate_limit.elapsed().as_secs() > 10 {
                     warn!(
@@ -39,7 +39,7 @@ impl RateLimiter {
                     );
                     self.most_recent_rate_limit = Instant::now();
                 }
-                
+
                 return Some(wait_for);
             }
         }

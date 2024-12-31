@@ -7,7 +7,11 @@ use sqlx::{Error as SqlxError, FromRow, Row};
 use tracing::info;
 
 impl super::PostgresRepo {
-    pub(crate) async fn create_verification_record(&self, event_id: &str, name: &str) -> Result<()> {
+    pub(crate) async fn create_verification_record(
+        &self,
+        event_id: &str,
+        name: &str,
+    ) -> Result<()> {
         let mut tx = self.conn_write.begin().await?;
 
         sqlx::query("DELETE FROM user_verification WHERE \"name\" = $1")
@@ -57,7 +61,10 @@ impl super::PostgresRepo {
         Ok(())
     }
 
-    pub(crate) async fn get_latest_user_verification(&self, pub_key: &str) -> Result<VerificationRecord> {
+    pub(crate) async fn get_latest_user_verification(
+        &self,
+        pub_key: &str,
+    ) -> Result<VerificationRecord> {
         let query = r#"SELECT
             v.id,
             v."name",
@@ -79,7 +86,10 @@ impl super::PostgresRepo {
             .ok_or(Error::SqlxError(SqlxError::RowNotFound))
     }
 
-    pub(crate) async fn get_oldest_user_verification(&self, before: u64) -> Result<VerificationRecord> {
+    pub(crate) async fn get_oldest_user_verification(
+        &self,
+        before: u64,
+    ) -> Result<VerificationRecord> {
         let query = r#"SELECT
             v.id,
             v."name",
@@ -105,7 +115,8 @@ impl super::PostgresRepo {
 
 impl FromRow<'_, PgRow> for VerificationRecord {
     fn from_row(row: &'_ PgRow) -> std::result::Result<Self, SqlxError> {
-        let name = Nip05Name::try_from(row.get::<'_, &str, &str>("name")).or(Err(SqlxError::RowNotFound))?;
+        let name = Nip05Name::try_from(row.get::<'_, &str, &str>("name"))
+            .or(Err(SqlxError::RowNotFound))?;
         Ok(VerificationRecord {
             rowid: row.get::<'_, i64, &str>("id") as u64,
             name,

@@ -5,7 +5,11 @@ use sqlx::Error::RowNotFound;
 use tracing::debug;
 
 impl super::PostgresRepo {
-    pub(crate) async fn create_invoice_record(&self, pub_key: &Keys, invoice_info: InvoiceInfo) -> Result<()> {
+    pub(crate) async fn create_invoice_record(
+        &self,
+        pub_key: &Keys,
+        invoice_info: InvoiceInfo,
+    ) -> Result<()> {
         let pub_key = pub_key.public_key().to_string();
         let mut tx = self.conn_write.begin().await?;
 
@@ -27,7 +31,11 @@ impl super::PostgresRepo {
         Ok(())
     }
 
-    pub(crate) async fn update_invoice(&self, payment_hash: &str, status: InvoiceStatus) -> Result<String> {
+    pub(crate) async fn update_invoice(
+        &self,
+        payment_hash: &str,
+        status: InvoiceStatus,
+    ) -> Result<String> {
         debug!("Payment Hash: {}", payment_hash);
         let query = "SELECT pubkey, status, amount FROM invoice WHERE payment_hash=$1;";
         let (pubkey, prev_invoice_status, amount) =

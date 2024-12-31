@@ -46,9 +46,8 @@ impl PaymentHandler {
             }
         }
 
-        let key = Keys::from_pk_str(&event.pubkey).map_err(|_| {
-            Notice::error(event.id, "invalid pubkey")
-        })?;
+        let key = Keys::from_pk_str(&event.pubkey)
+            .map_err(|_| Notice::error(event.id, "invalid pubkey"))?;
 
         match self.repo.get_account_balance(&key).await {
             Ok((user_admitted, balance)) => {

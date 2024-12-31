@@ -8,15 +8,15 @@ use std::sync::Arc;
 use std::time::Instant;
 use tracing::{debug, info};
 
-mod validation;
 mod payment;
 mod persistence;
 mod rate_limit;
+mod validation;
 
-use validation::EventValidator;
 use payment::PaymentHandler;
 use persistence::EventPersistence;
 use rate_limit::RateLimiter;
+use validation::EventValidator;
 
 /// Events submitted from a client, with a return channel for notices
 pub struct SubmittedEvent {

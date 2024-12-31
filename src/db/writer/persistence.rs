@@ -1,7 +1,7 @@
+use crate::db::writer::SubmittedEvent;
 use crate::error::Result;
 use crate::event::Event;
 use crate::repo::NostrRepo;
-use crate::db::writer::SubmittedEvent;
 use std::sync::Arc;
 use tokio::sync::broadcast::Sender;
 use tracing::{debug, trace};

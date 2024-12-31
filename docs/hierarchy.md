@@ -1,12 +1,20 @@
 # Project File Hierarchy
 
 ```
-├── 
   ├── .dockerignore
+  ├── .git
+  ├── .githooks
+    ├── pre-commit
+  ├── .github
+    ├── workflows
+      ├── audit.yml
+      ├── general.yml
+  ├── .gitignore
   ├── .sqlx
     ├── query-07998c130b6010768555a55965ffe480da2e1961e29c4598ce2b55a147c3f2a0.json
     ├── query-793f0df728d217c204123f12e4eafd6439db2d49d0cb506618ae9e780c7e0558.json
     ├── query-ed279fc2dda0c3ede3e81a4500fcaa9da2220f8a9ad6c1debc3095deb9f84759.json
+  ├── Cargo.lock
   ├── Cargo.toml
   ├── Dockerfile
   ├── README.md
@@ -17,12 +25,15 @@
   ├── docs
     ├── chat-sharing.md
     ├── githooks.md
+    ├── hierarchy.md
     ├── sync-engine-roadmap.md
     ├── sync-engine.md
   ├── migrations
     ├── 20200823135036_create_subscriptions_table.sql
     ├── 20240101000000_create_shared_conversations_table.sql
     ├── 20240101000001_enable_uuid.sql
+  ├── proto
+    ├── nauthz.proto
   ├── public
     ├── favicon.ico
     ├── index.html
@@ -38,21 +49,60 @@
     ├── style.css
   ├── scripts
     ├── generate_hierarchy.rs
+    ├── generate_hierarchy.sh
     ├── init_db.sh
   ├── spec.yaml
   ├── src
+    ├── cli.rs
+    ├── close.rs
+    ├── config.rs
     ├── configuration.rs
+    ├── conn.rs
+    ├── db
+      ├── builder.rs
+      ├── mod.rs
+      ├── types.rs
+      ├── writer
+        ├── mod.rs
+        ├── payment.rs
+        ├── persistence.rs
+        ├── rate_limit.rs
+        ├── validation.rs
+    ├── delegation.rs
+    ├── error.rs
+    ├── event.rs
+    ├── info.rs
     ├── lib.rs
     ├── main.rs
+    ├── nauthz.rs
+    ├── nip05.rs
+    ├── notice.rs
+    ├── payment
+      ├── cln_rest.rs
+      ├── lnbits.rs
+      ├── mod.rs
+    ├── repo
+      ├── mod.rs
+      ├── postgres
+        ├── account.rs
+        ├── event.rs
+        ├── invoice.rs
+        ├── mod.rs
+        ├── query.rs
+        ├── verification.rs
+      ├── postgres_migration.rs
     ├── routes
       ├── chats.rs
       ├── health_check.rs
       ├── mod.rs
       ├── subscriptions.rs
+    ├── server.rs
     ├── startup.rs
+    ├── subscription.rs
     ├── telemetry.rs
+    ├── utils.rs
+  ├── target
   ├── tests
-    ├── cli.rs
     ├── common
       ├── mod.rs
     ├── conn.rs

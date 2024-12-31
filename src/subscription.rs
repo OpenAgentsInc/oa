@@ -191,7 +191,7 @@ impl<'de> Deserialize<'de> for Subscription {
             return Err(serde::de::Error::custom("not enough fields"));
         }
         let mut i = va.iter_mut();
-        
+
         let req_cmd_str: serde_json::Value = i.next().unwrap().take();
         let req = req_cmd_str
             .as_str()

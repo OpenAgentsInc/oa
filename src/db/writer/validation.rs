@@ -28,10 +28,7 @@ impl EventValidator {
                     &event.get_event_id_prefix(),
                     &event.kind
                 );
-                return Err(Notice::blocked(
-                    event.id,
-                    "event kind is blocked by relay",
-                ));
+                return Err(Notice::blocked(event.id, "event kind is blocked by relay"));
             }
         }
 
@@ -43,10 +40,7 @@ impl EventValidator {
                     &event.get_event_id_prefix(),
                     &event.kind
                 );
-                return Err(Notice::blocked(
-                    event.id,
-                    "event kind is blocked by relay",
-                ));
+                return Err(Notice::blocked(event.id, "event kind is blocked by relay"));
             }
         }
 

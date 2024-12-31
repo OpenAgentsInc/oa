@@ -243,7 +243,11 @@ impl Verifier {
             let response_content_length = match response.body().size_hint().upper() {
                 Some(v) => v,
                 None => {
-                    info!("missing content length header for account {:?} at URL: {}", nip.to_string(), url);
+                    info!(
+                        "missing content length header for account {:?} at URL: {}",
+                        nip.to_string(),
+                        url
+                    );
                     return Ok(UserWebVerificationStatus::Unknown);
                 }
             };
