@@ -225,6 +225,13 @@ impl Subscription {
         self.id.clone()
     }
 
+    /// Determine if any filter is requesting historical (database)
+    /// queries. If every filter has limit:0, we do not need to query the DB.
+    #[must_use]
+    pub fn needs_historical_events(&self) -> bool {
+        self.filters.iter().any(|f| f.limit != Some(0))
+    }
+
     #[must_use]
     pub fn interested_in_event(&self, event: &Event) -> bool {
         for f in &self.filters {
