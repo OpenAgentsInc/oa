@@ -3,21 +3,22 @@ pub mod routes;
 pub mod startup;
 pub mod telemetry;
 
-// pub mod cli;
-// pub mod close;
-// pub mod config;
+pub mod close;
 pub mod conn;
+pub mod error;
+pub mod event;
+pub mod subscription;
+pub mod utils;
+
+// Modules to be implemented later:
+// pub mod cli;
+// pub mod config;
 // pub mod db;
 // pub mod delegation;
-pub mod error;
-// pub mod event;
 // pub mod info;
 // pub mod nauthz;
 // pub mod nip05;
 // pub mod notice;
 // pub mod repo;
-// pub mod subscription;
-pub mod utils;
-// Public API for creating relays programmatically
 // pub mod payment;
 // pub mod server;
