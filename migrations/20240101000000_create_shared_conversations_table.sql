@@ -1,6 +1,6 @@
 -- Create Shared Conversations Table
 CREATE TABLE shared_conversations (
-    id uuid NOT NULL PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id uuid NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
     chat_id TEXT NOT NULL,
     sender_npub TEXT NOT NULL,
     recipient_npub TEXT NOT NULL,
