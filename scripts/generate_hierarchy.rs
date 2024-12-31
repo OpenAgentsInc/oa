@@ -2,48 +2,6 @@ use std::fs::{self, File};
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
-use ignore::gitignore::{Gitignore, GitignoreBuilder};
-
-// Custom error type to handle both IO and Ignore errors
-#[derive(Debug)]
-enum Error {
-    Io(io::Error),
-    Ignore(ignore::Error),
-}
-
-impl From<io::Error> for Error {
-    fn from(err: io::Error) -> Error {
-        Error::Io(err)
-    }
-}
-
-impl From<ignore::Error> for Error {
-    fn from(err: ignore::Error) -> Error {
-        Error::Ignore(err)
-    }
-}
-
-fn get_ignore_patterns(root_dir: &Path) -> Result<Gitignore, Error> {
-    let mut builder = GitignoreBuilder::new(root_dir);
-    
-    // Add common Rust ignores
-    builder.add_line(None, "target/**").map_err(Error::Ignore)?;
-    builder.add_line(None, "**/*.rs.bk").map_err(Error::Ignore)?;
-    builder.add_line(None, "Cargo.lock").map_err(Error::Ignore)?;
-    
-    // Add .gitignore patterns if they exist
-    let gitignore_path = root_dir.join(".gitignore");
-    if gitignore_path.exists() {
-        if builder.add(&gitignore_path).is_none() {
-            return Err(Error::Io(io::Error::new(
-                io::ErrorKind::Other,
-                "Failed to add .gitignore patterns"
-            )));
-        }
-    }
-    
-    Ok(builder.build().map_err(Error::Ignore)?)
-}
 
 fn build_tree(paths: &[PathBuf], root: &Path) -> String {
     let mut output = String::new();
@@ -88,12 +46,20 @@ fn build_tree(paths: &[PathBuf], root: &Path) -> String {
     output
 }
 
-fn main() -> Result<(), Error> {
+fn main() -> io::Result<()> {
     let root_dir = Path::new(".").canonicalize()?;
-    let gitignore = get_ignore_patterns(&root_dir)?;
 
     // Create docs directory if it doesn't exist
     fs::create_dir_all(root_dir.join("docs"))?;
+
+    // Common patterns to ignore
+    let ignore_patterns = [
+        ".git",
+        "target",
+        "Cargo.lock",
+        ".DS_Store",
+        "docs/hierarchy.md",
+    ];
 
     // Collect all paths, filtering out ignored ones
     let mut paths: Vec<PathBuf> = WalkDir::new(&root_dir)
@@ -102,14 +68,10 @@ fn main() -> Result<(), Error> {
         .filter(|e| {
             let path = e.path();
             let relative = path.strip_prefix(&root_dir).unwrap();
+            let path_str = relative.to_string_lossy();
             
-            // Skip the .git directory and the docs/hierarchy.md file
-            if relative.starts_with(".git") || relative == Path::new("docs/hierarchy.md") {
-                return false;
-            }
-
-            // Use gitignore patterns
-            !gitignore.matched_path_or_any_parents(relative, false).is_ignore()
+            // Skip ignored patterns
+            !ignore_patterns.iter().any(|pattern| path_str.contains(pattern))
         })
         .map(|e| e.path().to_owned())
         .collect();
