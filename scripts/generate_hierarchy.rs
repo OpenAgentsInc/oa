@@ -4,43 +4,28 @@ use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
 
 fn build_tree(paths: &[PathBuf], root: &Path) -> String {
+    println!("Starting tree build with {} paths", paths.len());
     let mut output = String::new();
-    let mut current_level = 0;
-    let mut is_last_at_level = vec![];
+    
+    // First, let's print what we're working with
+    println!("Paths to process:");
+    for path in paths {
+        println!("  {}", path.strip_prefix(root).unwrap_or(path).display());
+    }
 
-    for (i, path) in paths.iter().enumerate() {
-        let relative = path.strip_prefix(root).unwrap();
+    for path in paths {
+        let relative = path.strip_prefix(root).unwrap_or(path);
         let depth = relative.components().count();
-
-        // Adjust is_last tracking
-        if depth > current_level {
-            while is_last_at_level.len() < depth - 1 {
-                is_last_at_level.push(false);
-            }
-        } else {
-            while is_last_at_level.len() >= depth {
-                is_last_at_level.pop();
-            }
-        }
-
-        // Check if this is the last item at this level
-        let is_last = i == paths.len() - 1 || {
-            let next = paths.get(i + 1).and_then(|p| p.strip_prefix(root).ok());
-            next.map_or(true, |next| next.components().count() <= depth)
-        };
-
-        // Build the line prefix
-        let mut prefix = String::new();
-        for &last in &is_last_at_level {
-            prefix.push_str(if last { "    " } else { "│   " });
-        }
-        prefix.push_str(if is_last { "└── " } else { "├── " });
-
-        // Add the line
-        output.push_str(&format!("{}{}\n", prefix, relative.components().last().unwrap().as_os_str().to_string_lossy()));
-
-        is_last_at_level.push(is_last);
-        current_level = depth;
+        
+        // Simple indentation based on depth
+        let indent = "  ".repeat(depth);
+        output.push_str(&format!("{}├── {}\n", 
+            indent,
+            relative.components().last()
+                .unwrap_or_default()
+                .as_os_str()
+                .to_string_lossy()
+        ));
     }
 
     output
@@ -63,6 +48,7 @@ fn main() -> io::Result<()> {
         "Cargo.lock",
         ".DS_Store",
         "docs/hierarchy.md",
+        "node_modules",
     ];
 
     println!("Collecting paths...");
@@ -100,14 +86,17 @@ fn main() -> io::Result<()> {
     println!("Sorted paths");
 
     // Build the tree
+    println!("Building tree...");
     let tree = build_tree(&paths, &root_dir);
-    println!("Built tree structure");
+    println!("Tree built successfully");
 
     // Create the output markdown
     let output = format!("# Project File Hierarchy\n\n```\n{}```\n", tree);
 
     // Write to docs/hierarchy.md
-    let mut file = File::create(root_dir.join("docs/hierarchy.md"))?;
+    let output_path = root_dir.join("docs/hierarchy.md");
+    println!("Writing to {:?}", output_path);
+    let mut file = File::create(&output_path)?;
     file.write_all(output.as_bytes())?;
 
     println!("Updated file hierarchy written to: docs/hierarchy.md");
