@@ -2,8 +2,9 @@ use actix_http::error::HttpError;
 use actix_web::http::header::{self, HeaderValue, TryIntoHeaderValue};
 use actix_web::{error::ParseError, web, HttpMessage, HttpResponse};
 use serde::{Deserialize, Serialize};
-use sqlx::{PgPool, Row}; // Added Row trait
+use sqlx::{PgPool, Row};
 use std::fmt;
+use tracing::{info, error, Level};
 use uuid::Uuid;
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -67,19 +68,24 @@ impl header::Header for NostrPubkey {
     }
 }
 
+#[tracing::instrument(level = "info", name = "Checking database connection")]
 async fn debug_connection(pool: &PgPool) {
+    info!("Starting database connection check");
+    
     match sqlx::query("SELECT current_database(), current_schema(), version()").fetch_one(pool).await {
         Ok(row) => {
             let db: &str = row.try_get(0).unwrap_or("unknown");
             let schema: &str = row.try_get(1).unwrap_or("unknown");
             let version: &str = row.try_get(2).unwrap_or("unknown");
-            tracing::info!(
-                "Connected to database. DB: {}, Schema: {}, Version: {}",
-                db, schema, version
+            info!(
+                database = %db,
+                schema = %schema,
+                version = %version,
+                "Database connection info"
             );
         }
         Err(e) => {
-            tracing::error!("Failed to get database info: {}", e);
+            error!(error = %e, "Failed to get database info");
         }
     }
 
@@ -92,10 +98,10 @@ async fn debug_connection(pool: &PgPool) {
                 .iter()
                 .map(|row| row.try_get(0).unwrap_or_default())
                 .collect();
-            tracing::info!("Available tables: {:?}", tables);
+            info!(tables = ?tables, "Available tables in schema");
         }
         Err(e) => {
-            tracing::error!("Failed to list tables: {}", e);
+            error!(error = %e, "Failed to list tables");
         }
     }
 
@@ -109,12 +115,14 @@ async fn debug_connection(pool: &PgPool) {
     ).fetch_one(pool).await {
         Ok(row) => {
             let exists: bool = row.try_get(0).unwrap_or(false);
-            tracing::info!("shared_conversations table exists: {}", exists);
+            info!(exists = exists, "Checked shared_conversations table existence");
         }
         Err(e) => {
-            tracing::error!("Failed to check table existence: {}", e);
+            error!(error = %e, "Failed to check table existence");
         }
     }
+
+    info!("Database connection check complete");
 }
 
 #[tracing::instrument(
@@ -133,14 +141,20 @@ async fn store_shared_conversation(
     nostr_pubkey: &NostrPubkey,
     payload: &ShareRequest,
 ) -> Result<Uuid, sqlx::Error> {
+    info!("Starting shared conversation storage");
+    
     // Debug connection before attempting insert
     debug_connection(pool).await;
 
     let id = Uuid::new_v4();
+    info!(share_id = %id, "Generated UUID for share");
     
     // Convert messages to Value, mapping any JSON error to sqlx::Error
     let messages_json = serde_json::to_value(&payload.messages)
-        .map_err(|e| sqlx::Error::Protocol(e.to_string()))?;
+        .map_err(|e| {
+            error!(error = %e, "Failed to serialize messages to JSON");
+            sqlx::Error::Protocol(e.to_string())
+        })?;
     
     let metadata_json = serde_json::json!({
         "messageCount": payload.metadata.message_count,
@@ -148,6 +162,7 @@ async fn store_shared_conversation(
         "originalMetadata": payload.messages.iter().filter_map(|m| m.metadata.clone()).collect::<Vec<_>>()
     });
 
+    info!("Attempting database insert");
     sqlx::query!(
         r#"
         INSERT INTO shared_conversations 
@@ -165,10 +180,11 @@ async fn store_shared_conversation(
     .execute(pool)
     .await
     .map_err(|e| {
-        tracing::error!("Failed to store shared conversation: {:?}", e);
+        error!(error = %e, "Failed to insert shared conversation");
         e
     })?;
 
+    info!(share_id = %id, "Successfully stored shared conversation");
     Ok(id)
 }
 
@@ -178,22 +194,28 @@ pub async fn share_chat(
     payload: web::Json<ShareRequest>,
     pool: web::Data<PgPool>,
 ) -> HttpResponse {
-    tracing::info!(
-        "Received conversation from {} with {} messages for chat_id {}",
-        nostr_pubkey.0,
-        payload.messages.len(),
-        chat_id
+    info!(
+        sender = %nostr_pubkey.0,
+        chat_id = %chat_id,
+        message_count = %payload.messages.len(),
+        "Received share request"
     );
 
     match store_shared_conversation(&pool, &chat_id, &nostr_pubkey, &payload).await {
-        Ok(share_id) => HttpResponse::Ok().json(serde_json::json!({
-            "status": "success",
-            "message": "Chat shared successfully",
-            "share_id": share_id.to_string()
-        })),
-        Err(_) => HttpResponse::InternalServerError().json(serde_json::json!({
-            "status": "error",
-            "message": "Failed to store shared conversation"
-        })),
+        Ok(share_id) => {
+            info!(share_id = %share_id, "Share successful");
+            HttpResponse::Ok().json(serde_json::json!({
+                "status": "success",
+                "message": "Chat shared successfully",
+                "share_id": share_id.to_string()
+            }))
+        },
+        Err(e) => {
+            error!(error = %e, "Share failed");
+            HttpResponse::InternalServerError().json(serde_json::json!({
+                "status": "error",
+                "message": "Failed to store shared conversation"
+            }))
+        },
     }
 }
