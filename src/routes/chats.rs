@@ -162,12 +162,25 @@ async fn store_shared_conversation(
         "originalMetadata": payload.messages.iter().filter_map(|m| m.metadata.clone()).collect::<Vec<_>>()
     });
 
+    // Log the exact values we're trying to insert
+    info!(
+        id = %id,
+        chat_id = %chat_id,
+        sender_npub = %nostr_pubkey.0,
+        recipient_npub = %payload.recipient,
+        message_count = %payload.messages.len(),
+        messages = %serde_json::to_string(&messages_json).unwrap_or_default(),
+        metadata = %serde_json::to_string(&metadata_json).unwrap_or_default(),
+        "Attempting database insert with values"
+    );
+
     info!("Attempting database insert");
-    sqlx::query!(
+    let result = sqlx::query!(
         r#"
         INSERT INTO shared_conversations 
         (id, chat_id, sender_npub, recipient_npub, message_count, messages, metadata)
         VALUES ($1, $2, $3, $4, $5, $6, $7)
+        RETURNING id
         "#,
         id,
         chat_id,
@@ -177,15 +190,19 @@ async fn store_shared_conversation(
         messages_json,
         metadata_json
     )
-    .execute(pool)
-    .await
-    .map_err(|e| {
-        error!(error = %e, "Failed to insert shared conversation");
-        e
-    })?;
+    .fetch_one(pool)
+    .await;
 
-    info!(share_id = %id, "Successfully stored shared conversation");
-    Ok(id)
+    match result {
+        Ok(row) => {
+            info!(share_id = %id, "Successfully stored shared conversation");
+            Ok(id)
+        }
+        Err(e) => {
+            error!(error = %e, "Failed to insert shared conversation");
+            Err(e)
+        }
+    }
 }
 
 pub async fn share_chat(
