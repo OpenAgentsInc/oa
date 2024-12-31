@@ -9,11 +9,11 @@ use tracing::info;
 pub async fn run_migrations(pool: &PostgresPool) -> Result<usize, sqlx::Error> {
     let mut conn = pool.acquire().await?;
     let migrations = vec![
-        include_str!("../../migrations/20230101_init.sql"),
-        include_str!("../../migrations/20230102_add_expires.sql"),
-        include_str!("../../migrations/20230103_add_verification.sql"),
-        include_str!("../../migrations/20230104_add_account.sql"),
-        include_str!("../../migrations/20230105_add_invoice.sql"),
+        include_str!("../../../migrations/20230101_init.sql"),
+        include_str!("../../../migrations/20230102_add_expires.sql"),
+        include_str!("../../../migrations/20230103_add_verification.sql"),
+        include_str!("../../../migrations/20230104_add_account.sql"),
+        include_str!("../../../migrations/20230105_add_invoice.sql"),
     ];
 
     let mut version = 0;
@@ -29,7 +29,7 @@ pub async fn create_database(url: &str) -> Result<(), sqlx::Error> {
     let db_url = sqlx::postgres::PgConnectOptions::from_str(url)
         .unwrap()
         .database("postgres");
-    let mut conn = sqlx::PgConnection::connect(&db_url.to_string()).await?;
+    let mut conn = sqlx::PgConnection::connect_with(&db_url).await?;
     let db_name = sqlx::postgres::PgConnectOptions::from_str(url)
         .unwrap()
         .get_database()
