@@ -17,6 +17,8 @@
   ├── docs
     ├── chat-sharing.md
     ├── githooks.md
+    ├── sync-engine-roadmap.md
+    ├── sync-engine.md
   ├── migrations
     ├── 20200823135036_create_subscriptions_table.sql
     ├── 20240101000000_create_shared_conversations_table.sql
