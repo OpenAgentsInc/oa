@@ -1,4 +1,5 @@
 
+```rust
 use crate::repo::postgres::PostgresPool;
 use sqlx::migrate::MigrateDatabase;
 use sqlx::postgres::Postgres;
@@ -9,11 +10,11 @@ use tracing::info;
 pub async fn run_migrations(pool: &PostgresPool) -> Result<usize, sqlx::Error> {
     let mut conn = pool.acquire().await?;
     let migrations = vec![
-        include_str!("../../../migrations/20230101_init.sql"),
-        include_str!("../../../migrations/20230102_add_expires.sql"),
-        include_str!("../../../migrations/20230103_add_verification.sql"),
-        include_str!("../../../migrations/20230104_add_account.sql"),
-        include_str!("../../../migrations/20230105_add_invoice.sql"),
+        include_str!("../../../../migrations/20230101_init.sql"),
+        include_str!("../../../../migrations/20230102_add_expires.sql"),
+        include_str!("../../../../migrations/20230103_add_verification.sql"),
+        include_str!("../../../../migrations/20230104_add_account.sql"),
+        include_str!("../../../../migrations/20230105_add_invoice.sql"),
     ];
 
     let mut version = 0;
@@ -46,3 +47,4 @@ pub async fn create_database(url: &str) -> Result<(), sqlx::Error> {
 
     Ok(())
 }
+```
