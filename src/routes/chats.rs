@@ -1,13 +1,12 @@
 use actix_http::error::HttpError;
 use actix_web::http::header::{self, HeaderValue, TryIntoHeaderValue};
 use actix_web::{error::ParseError, web, HttpMessage, HttpResponse};
-use chrono::Utc;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 use std::fmt;
 use uuid::Uuid;
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 #[allow(dead_code)]
 pub struct ShareRequest {
     recipient: String,
@@ -15,7 +14,7 @@ pub struct ShareRequest {
     metadata: ShareMetadata,
 }
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 #[allow(dead_code)]
 pub struct ChatMessage {
     id: String,
@@ -26,7 +25,7 @@ pub struct ChatMessage {
     metadata: Option<serde_json::Value>,
 }
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 #[allow(dead_code)]
 pub struct ShareMetadata {
     #[serde(rename = "messageCount")]
@@ -34,7 +33,7 @@ pub struct ShareMetadata {
     timestamp: i64,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct NostrPubkey(String);
 
 impl fmt::Display for NostrPubkey {
@@ -85,7 +84,11 @@ async fn store_shared_conversation(
     payload: &ShareRequest,
 ) -> Result<Uuid, sqlx::Error> {
     let id = Uuid::new_v4();
-    let messages_json = serde_json::to_value(&payload.messages)?;
+    
+    // Convert messages to Value, mapping any JSON error to sqlx::Error
+    let messages_json = serde_json::to_value(&payload.messages)
+        .map_err(|e| sqlx::Error::Protocol(e.to_string()))?;
+    
     let metadata_json = serde_json::json!({
         "messageCount": payload.metadata.message_count,
         "timestamp": payload.metadata.timestamp,
@@ -133,7 +136,7 @@ pub async fn share_chat(
         Ok(share_id) => HttpResponse::Ok().json(serde_json::json!({
             "status": "success",
             "message": "Chat shared successfully",
-            "share_id": share_id
+            "share_id": share_id.to_string()
         })),
         Err(_) => HttpResponse::InternalServerError().json(serde_json::json!({
             "status": "error",
