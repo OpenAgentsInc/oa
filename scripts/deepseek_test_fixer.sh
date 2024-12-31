@@ -94,15 +94,24 @@ $hierarchy_content
 Return ONLY a JSON array of file paths that need to be examined to fix these errors. Example format: [\"src/file1.rs\",\"src/file2.rs\"]. Return ONLY the JSON array, no other text or explanation."
     
     files_to_check=$(call_deepseek "$prompt")
-    if [[ $files_to_check == ERROR:* ]] || ! echo "$files_to_check" | jq -e 'if type == "array" then true else false end' >/dev/null 2>&1; then
-        echo -e "\nFailed to get valid file list from Deepseek:"
+    if [[ $files_to_check == ERROR:* ]]; then
+        echo -e "\nFailed to get response from Deepseek:"
         echo "$files_to_check"
         echo "Skipping iteration..."
         ((iteration++))
         continue
     fi
     
-    echo -e "\nFiles to examine: $files_to_check"
+    # Validate JSON array
+    if ! echo "$files_to_check" | jq -e 'if type == "array" then . else null end' >/dev/null 2>&1; then
+        echo -e "\nInvalid JSON array from Deepseek:"
+        echo "$files_to_check"
+        echo "Skipping iteration..."
+        ((iteration++))
+        continue
+    fi
+    
+    echo -e "\nProcessing files: $files_to_check"
     
     # Process each file from the JSON array
     echo "$files_to_check" | jq -r '.[]' | while read -r file; do
