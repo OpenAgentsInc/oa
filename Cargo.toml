@@ -11,6 +11,10 @@ path = "src/lib.rs"
 path = "src/main.rs"
 name = "oa"
 
+[[bin]]
+name = "generate-hierarchy"
+path = "scripts/generate_hierarchy.rs"
+
 [dependencies]
 actix-web = "4"
 actix-http = "3.0"
@@ -36,7 +40,9 @@ tracing-bunyan-formatter = "0.3.1"
 serde-aux = "4"
 tracing-log = "0.2.0"
 tracing-actix-web = "0.7"
-secrecy = { version = "0.8", features = ["serde"] }
+secrety = { version = "0.8", features = ["serde"] }
+walkdir = "2.4"
+ignore = "0.4"
 
 [dev-dependencies]
 reqwest = { version = "0.12", features = ["json"] }
