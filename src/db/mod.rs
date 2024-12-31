@@ -1,3 +1,4 @@
+
 //! Event persistence and querying
 use crate::config::Settings;
 use crate::error::{Error, Result};
@@ -31,9 +32,9 @@ pub struct QueryResult {
 }
 
 async fn build_postgres_pool(settings: &Settings, metrics: NostrMetrics) -> PostgresRepo {
-    let mut options: PgConnectOptions = settings.database.connection.as_str().parse().unwrap();
-    options.log_statements(LevelFilter::Debug);
-    options.log_slow_statements(LevelFilter::Warn, Duration::from_secs(60));
+    let options: PgConnectOptions = settings.database.connection.as_str().parse().unwrap();
+    let mut options = options.log_statements(LevelFilter::Debug);
+    options = options.log_slow_statements(LevelFilter::Warn, Duration::from_secs(60));
 
     let pool: PostgresPool = PoolOptions::new()
         .max_connections(settings.database.max_conn)
@@ -45,9 +46,9 @@ async fn build_postgres_pool(settings: &Settings, metrics: NostrMetrics) -> Post
 
     let write_pool: PostgresPool = match &settings.database.connection_write {
         Some(cfg_write) => {
-            let mut options_write: PgConnectOptions = cfg_write.as_str().parse().unwrap();
-            options_write.log_statements(LevelFilter::Debug);
-            options_write.log_slow_statements(LevelFilter::Warn, Duration::from_secs(60));
+            let options_write: PgConnectOptions = cfg_write.as_str().parse().unwrap();
+            let mut options_write = options_write.log_statements(LevelFilter::Debug);
+            options_write = options_write.log_slow_statements(LevelFilter::Warn, Duration::from_secs(60));
 
             PoolOptions::new()
                 .max_connections(settings.database.max_conn)
