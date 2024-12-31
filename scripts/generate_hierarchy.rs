@@ -47,10 +47,14 @@ fn build_tree(paths: &[PathBuf], root: &Path) -> String {
 }
 
 fn main() -> io::Result<()> {
+    println!("Starting hierarchy generation...");
+    
     let root_dir = Path::new(".").canonicalize()?;
+    println!("Root directory: {:?}", root_dir);
 
     // Create docs directory if it doesn't exist
     fs::create_dir_all(root_dir.join("docs"))?;
+    println!("Created docs directory");
 
     // Common patterns to ignore
     let ignore_patterns = [
@@ -61,26 +65,43 @@ fn main() -> io::Result<()> {
         "docs/hierarchy.md",
     ];
 
+    println!("Collecting paths...");
     // Collect all paths, filtering out ignored ones
     let mut paths: Vec<PathBuf> = WalkDir::new(&root_dir)
         .into_iter()
-        .filter_map(|e| e.ok())
+        .filter_map(|e| {
+            match e {
+                Ok(entry) => Some(entry),
+                Err(err) => {
+                    println!("Error walking directory: {:?}", err);
+                    None
+                }
+            }
+        })
         .filter(|e| {
             let path = e.path();
             let relative = path.strip_prefix(&root_dir).unwrap();
             let path_str = relative.to_string_lossy();
             
             // Skip ignored patterns
-            !ignore_patterns.iter().any(|pattern| path_str.contains(pattern))
+            let should_include = !ignore_patterns.iter().any(|pattern| path_str.contains(pattern));
+            if !should_include {
+                println!("Ignoring: {}", path_str);
+            }
+            should_include
         })
         .map(|e| e.path().to_owned())
         .collect();
 
+    println!("Found {} paths", paths.len());
+
     // Sort paths
     paths.sort();
+    println!("Sorted paths");
 
     // Build the tree
     let tree = build_tree(&paths, &root_dir);
+    println!("Built tree structure");
 
     // Create the output markdown
     let output = format!("# Project File Hierarchy\n\n```\n{}```\n", tree);
