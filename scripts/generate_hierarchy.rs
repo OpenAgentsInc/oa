@@ -4,21 +4,40 @@ use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
 use ignore::gitignore::{Gitignore, GitignoreBuilder};
 
-fn get_ignore_patterns(root_dir: &Path) -> io::Result<Gitignore> {
+// Custom error type to handle both IO and Ignore errors
+#[derive(Debug)]
+enum Error {
+    Io(io::Error),
+    Ignore(ignore::Error),
+}
+
+impl From<io::Error> for Error {
+    fn from(err: io::Error) -> Error {
+        Error::Io(err)
+    }
+}
+
+impl From<ignore::Error> for Error {
+    fn from(err: ignore::Error) -> Error {
+        Error::Ignore(err)
+    }
+}
+
+fn get_ignore_patterns(root_dir: &Path) -> Result<Gitignore, Error> {
     let mut builder = GitignoreBuilder::new(root_dir);
     
     // Add common Rust ignores
-    builder.add_line(None, "target/**")?;
-    builder.add_line(None, "**/*.rs.bk")?;
-    builder.add_line(None, "Cargo.lock")?;
+    builder.add_line(None, "target/**").map_err(Error::Ignore)?;
+    builder.add_line(None, "**/*.rs.bk").map_err(Error::Ignore)?;
+    builder.add_line(None, "Cargo.lock").map_err(Error::Ignore)?;
     
     // Add .gitignore patterns if they exist
     let gitignore_path = root_dir.join(".gitignore");
     if gitignore_path.exists() {
-        builder.add(gitignore_path)?;
+        builder.add(&gitignore_path).map_err(Error::Ignore)?;
     }
     
-    Ok(builder.build()?)
+    Ok(builder.build().map_err(Error::Ignore)?)
 }
 
 fn build_tree(paths: &[PathBuf], root: &Path) -> String {
@@ -64,7 +83,7 @@ fn build_tree(paths: &[PathBuf], root: &Path) -> String {
     output
 }
 
-fn main() -> io::Result<()> {
+fn main() -> Result<(), Error> {
     let root_dir = Path::new(".").canonicalize()?;
     let gitignore = get_ignore_patterns(&root_dir)?;
 
@@ -85,7 +104,7 @@ fn main() -> io::Result<()> {
             }
 
             // Use gitignore patterns
-            !gitignore.matched_path_or_any_parents(relative).is_ignore()
+            !gitignore.matched_path_or_any_parents(relative, false).is_ignore()
         })
         .map(|e| e.path().to_owned())
         .collect();
