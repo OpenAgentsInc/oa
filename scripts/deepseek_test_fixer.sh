@@ -13,6 +13,11 @@ if [ ! -f "$LOG_FILE" ]; then
     echo "# Deepseek Test Fixer Log\n\n" > "$LOG_FILE"
 fi
 
+# Function to extract relevant error messages
+extract_errors() {
+    echo "$1" | grep -A 1 "error\[E[0-9]*\]:\|error: " | head -n 20
+}
+
 # Function to call Deepseek API and handle response
 call_deepseek() {
     local prompt="$1"
@@ -40,15 +45,13 @@ call_deepseek() {
 echo "Updating hierarchy..."
 ./scripts/generate_hierarchy.sh
 
-# Function to capture test output and errors
-run_tests() {
-    cargo test 2>&1
-    return $?
-}
-
 # Main loop
 MAX_ITERATIONS=5
 iteration=1
+
+# Set required environment variables
+export OUT_DIR="target/out"
+mkdir -p "$OUT_DIR"
 
 while [ $iteration -le $MAX_ITERATIONS ]; do
     echo "Iteration $iteration of $MAX_ITERATIONS"
@@ -58,8 +61,10 @@ while [ $iteration -le $MAX_ITERATIONS ]; do
     test_output=$(cargo test 2>&1)
     test_exit_code=$?
     
-    echo "Test output:"
-    echo "$test_output"
+    # Extract and display only the error messages
+    echo "Test errors:"
+    error_output=$(extract_errors "$test_output")
+    echo "$error_output"
     echo "Test exit code: $test_exit_code"
     
     if [ $test_exit_code -eq 0 ]; then
@@ -72,7 +77,7 @@ while [ $iteration -le $MAX_ITERATIONS ]; do
 
     # Ask Deepseek for files to examine
     echo "Asking Deepseek for files to examine..."
-    prompt="Given these test failures:\n$test_output\n\nAnd this project hierarchy:\n$hierarchy_content\n\nAnalyze the test failures and return ONLY a JSON array of file paths that need to be examined, like this: [\"src/file1.rs\",\"src/file2.rs\"]. Return ONLY the JSON array, no other text."
+    prompt="Given these test failures:\n$error_output\n\nAnd this project hierarchy:\n$hierarchy_content\n\nAnalyze the test failures and return ONLY a JSON array of file paths that need to be examined, like this: [\"src/file1.rs\",\"src/file2.rs\"]. Return ONLY the JSON array, no other text."
     
     files_to_check=$(call_deepseek "$prompt")
     if [[ $files_to_check == ERROR:* ]]; then
@@ -104,7 +109,7 @@ while [ $iteration -le $MAX_ITERATIONS ]; do
         
         # Ask Deepseek if file needs changes
         echo "Asking Deepseek about changes for $file..."
-        prompt="Given this file content:\n$file_content\n\nAnd these test failures:\n$test_output\n\nDoes this file need changes to fix the failing tests? If yes, provide the complete updated file content. If no, respond with 'NO_CHANGES_NEEDED'. Format your response to start with either 'CHANGES:' followed by the new content, or 'NO_CHANGES_NEEDED'"
+        prompt="Given this file content:\n$file_content\n\nAnd these test failures:\n$error_output\n\nDoes this file need changes to fix the failing tests? If yes, provide the complete updated file content. If no, respond with 'NO_CHANGES_NEEDED'. Format your response to start with either 'CHANGES:' followed by the new content, or 'NO_CHANGES_NEEDED'"
         
         response=$(call_deepseek "$prompt")
         if [[ $response == ERROR:* ]]; then
@@ -154,8 +159,10 @@ while [ $iteration -le $MAX_ITERATIONS ]; do
     test_output=$(cargo test 2>&1)
     test_exit_code=$?
     
-    echo "Test output:"
-    echo "$test_output"
+    # Extract and display only the error messages
+    echo "Test errors:"
+    error_output=$(extract_errors "$test_output")
+    echo "$error_output"
     echo "Test exit code: $test_exit_code"
     
     if [ $test_exit_code -eq 0 ]; then
