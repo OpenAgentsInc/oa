@@ -104,9 +104,8 @@ Return ONLY a JSON array of file paths that need to be examined to fix these err
     
     echo -e "\nFiles to examine: $files_to_check"
     
-    # Process each file
-    while IFS= read -r file; do
-        file=$(echo "$file" | tr -d '"' | tr -d ',')
+    # Process each file from the JSON array
+    echo "$files_to_check" | jq -r '.[]' | while read -r file; do
         echo -e "\nAnalyzing $file..."
         
         if [ ! -f "$file" ]; then
@@ -169,7 +168,7 @@ Format your response to start with either 'CHANGES:' followed by the new content
             git add "$file"
             git commit -m "$explanation" -n
         fi
-    done < <(echo "$files_to_check" | jq -r '.[]')
+    done
     
     ((iteration++))
 done
