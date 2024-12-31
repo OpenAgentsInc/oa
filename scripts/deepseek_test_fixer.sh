@@ -13,17 +13,27 @@ if [ ! -f "$LOG_FILE" ]; then
     echo "# Deepseek Test Fixer Log\n\n" > "$LOG_FILE"
 fi
 
-# Function to call Deepseek API
+# Function to call Deepseek API and handle response
 call_deepseek() {
     local prompt="$1"
-    curl -s "$DEEPSEEK_API_URL" \
+    local response
+    response=$(curl -s "$DEEPSEEK_API_URL" \
         -H "Content-Type: application/json" \
         -H "Authorization: Bearer $DEEPSEEK_API_KEY" \
         -d "{
             \"model\": \"deepseek-chat\",
             \"messages\": [{\"role\": \"user\", \"content\": \"$prompt\"}],
             \"stream\": false
-        }" | jq -r '.choices[0].message.content'
+        }")
+    
+    # Check if response contains choices array
+    if echo "$response" | jq -e '.choices[0].message.content' >/dev/null 2>&1; then
+        echo "$response" | jq -r '.choices[0].message.content'
+    else
+        echo "ERROR: Invalid response from Deepseek API"
+        echo "Full response: $response"
+        return 1
+    fi
 }
 
 # Update hierarchy
@@ -32,7 +42,7 @@ echo "Updating hierarchy..."
 
 # Function to capture test output and errors
 run_tests() {
-    cargo test
+    cargo test 2>&1
     return $?
 }
 
@@ -61,14 +71,25 @@ while [ $iteration -le $MAX_ITERATIONS ]; do
     hierarchy_content=$(cat docs/hierarchy.md)
 
     # Ask Deepseek for files to examine
-    prompt="Given these test failures:\n$test_output\n\nAnd this project hierarchy:\n$hierarchy_content\n\nReturn a JSON array of file paths that are most likely to need examination to fix these failing tests. Format: [\"path/to/file1.rs\", \"path/to/file2.rs\"]"
-    
     echo "Asking Deepseek for files to examine..."
+    prompt="Given these test failures:\n$test_output\n\nAnd this project hierarchy:\n$hierarchy_content\n\nAnalyze the test failures and return ONLY a JSON array of file paths that need to be examined, like this: [\"src/file1.rs\",\"src/file2.rs\"]. Return ONLY the JSON array, no other text."
+    
     files_to_check=$(call_deepseek "$prompt")
+    if [[ $files_to_check == ERROR:* ]]; then
+        echo "Failed to get file list from Deepseek. Retrying..."
+        continue
+    fi
+    
     echo "Deepseek suggested files: $files_to_check"
     
-    # Remove brackets and quotes, split into array
-    files_array=($(echo "$files_to_check" | tr -d '[]"' | tr ',' '\n'))
+    # Validate JSON array and split into array
+    if ! echo "$files_to_check" | jq -e 'if type == "array" then true else false end' >/dev/null 2>&1; then
+        echo "Invalid JSON array from Deepseek. Retrying..."
+        continue
+    fi
+    
+    # Convert JSON array to bash array
+    readarray -t files_array < <(echo "$files_to_check" | jq -r '.[]')
     
     for file in "${files_array[@]}"; do
         echo "Analyzing $file..."
@@ -82,10 +103,15 @@ while [ $iteration -le $MAX_ITERATIONS ]; do
         file_content=$(cat "$file")
         
         # Ask Deepseek if file needs changes
+        echo "Asking Deepseek about changes for $file..."
         prompt="Given this file content:\n$file_content\n\nAnd these test failures:\n$test_output\n\nDoes this file need changes to fix the failing tests? If yes, provide the complete updated file content. If no, respond with 'NO_CHANGES_NEEDED'. Format your response to start with either 'CHANGES:' followed by the new content, or 'NO_CHANGES_NEEDED'"
         
-        echo "Asking Deepseek if file needs changes..."
         response=$(call_deepseek "$prompt")
+        if [[ $response == ERROR:* ]]; then
+            echo "Failed to get response from Deepseek for $file. Skipping..."
+            continue
+        fi
+        
         echo "Deepseek response starts with: ${response:0:50}..."
         
         if [[ $response == NO_CHANGES_NEEDED* ]]; then
@@ -100,6 +126,9 @@ while [ $iteration -le $MAX_ITERATIONS ]; do
             # Get explanation from Deepseek
             prompt="Explain the changes you just suggested for $file in one line"
             explanation=$(call_deepseek "$prompt")
+            if [[ $explanation == ERROR:* ]]; then
+                explanation="Updated file contents to fix failing tests"
+            fi
             
             echo "Deepseek suggested changes with explanation: $explanation"
             
@@ -107,6 +136,9 @@ while [ $iteration -le $MAX_ITERATIONS ]; do
             echo -e "\n## $(date '+%Y-%m-%d %H:%M:%S')\n" >> "$LOG_FILE"
             echo "File: $file" >> "$LOG_FILE"
             echo "Changes: $explanation" >> "$LOG_FILE"
+            echo "\`\`\`diff" >> "$LOG_FILE"
+            diff -u "$file" <(echo "$new_content") >> "$LOG_FILE" || true
+            echo "\`\`\`" >> "$LOG_FILE"
             
             # Update the file
             echo "$new_content" > "$file"
