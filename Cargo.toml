@@ -40,7 +40,7 @@ tracing-bunyan-formatter = "0.3.1"
 serde-aux = "4"
 tracing-log = "0.2.0"
 tracing-actix-web = "0.7"
-secrety = { version = "0.8", features = ["serde"] }
+secrecy = { version = "0.8", features = ["serde"] }
 walkdir = "2.4"
 ignore = "0.4"
 
