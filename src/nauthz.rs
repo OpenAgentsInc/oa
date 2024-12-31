@@ -1,3 +1,4 @@
+
 use crate::error::{Error, Result};
 use crate::{event::Event, nip05::Nip05Name};
 use nauthz_grpc::authorization_client::AuthorizationClient;
