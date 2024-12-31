@@ -22,6 +22,11 @@ extract_errors() {
     echo "$1" | grep -A 2 "error\[E[0-9]*\]:\|error: \|thread.*panicked\|FAILED" || true
 }
 
+# Function to extract files from error messages
+extract_files() {
+    echo "$1" | grep -o 'src/[^:]*' | sort -u || true
+}
+
 # Function to call Deepseek API
 call_deepseek() {
     local prompt="$1"
@@ -63,8 +68,10 @@ while [ $iteration -le $MAX_ITERATIONS ]; do
     
     # Process test results
     error_output=$(extract_errors "$test_output")
-    echo "Test errors:"
-    echo "$error_output"
+    if [ -n "$error_output" ]; then
+        echo "Found test errors:"
+        echo "$error_output"
+    fi
     
     if [ $test_exit_code -eq 0 ]; then
         echo "All tests passing! Exiting..."
@@ -91,22 +98,24 @@ $hierarchy_content
 Return ONLY a JSON array of file paths that need to be examined to fix these errors. Example: [\"src/file1.rs\",\"src/file2.rs\"]. Return ONLY the JSON array.")
 
     # Parse files or fallback to error messages
-    if ! files_array=($(echo "$files_json" | jq -r '.[]' 2>/dev/null)); then
+    if echo "$files_json" | jq -e 'if type=="array" then true else false end' >/dev/null 2>&1; then
+        readarray -t files_array < <(echo "$files_json" | jq -r '.[]')
+    else
         echo "Using files from error messages..."
-        mapfile -t files_array < <(echo "$error_output" | grep -o 'src/[^:]*' | sort -u)
+        readarray -t files_array < <(extract_files "$error_output")
     fi
 
-    echo -e "\nFiles to examine: ${files_array[*]}"
-    
     if [ ${#files_array[@]} -eq 0 ]; then
-        echo "No files found to examine. Trying to extract from full test output..."
-        mapfile -t files_array < <(echo "$test_output" | grep -o 'src/[^:]*' | sort -u)
+        echo "No files found in errors, checking full output..."
+        readarray -t files_array < <(extract_files "$test_output")
         
         if [ ${#files_array[@]} -eq 0 ]; then
-            echo "Still no files found. Examining default locations..."
+            echo "No files found. Examining default locations..."
             files_array=("src/lib.rs" "src/main.rs")
         fi
     fi
+
+    echo -e "\nFiles to examine: ${files_array[*]}"
     
     # Process each file
     for file in "${files_array[@]}"; do
