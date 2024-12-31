@@ -90,7 +90,7 @@ impl crate::repo::NostrRepo for PostgresRepo {
         unimplemented!()
     }
 
-    async fn query_subscription(&self, _filter: crate::filter::Filter) -> Result<Vec<crate::event::Event>> {
+    async fn query_subscription(&self, _filter: crate::filter::Filter, _limit: Option<u64>, _offset: Option<u64>, _since: Option<i64>, _until: Option<i64>) -> Result<Vec<crate::event::Event>> {
         unimplemented!()
     }
 
@@ -122,7 +122,7 @@ impl crate::repo::NostrRepo for PostgresRepo {
         unimplemented!()
     }
 
-    async fn admit_account(&self, _pubkey: String) -> Result<()> {
+    async fn admit_account(&self, _pubkey: String, _amount: u64) -> Result<()> {
         unimplemented!()
     }
 
@@ -130,15 +130,15 @@ impl crate::repo::NostrRepo for PostgresRepo {
         unimplemented!()
     }
 
-    async fn update_account_balance(&self, _pubkey: String, _amount: i64) -> Result<()> {
+    async fn update_account_balance(&self, _pubkey: String, _amount: i64, _reason: String) -> Result<()> {
         unimplemented!()
     }
 
-    async fn create_invoice_record(&self, _invoice: crate::invoice::Invoice) -> Result<()> {
+    async fn create_invoice_record(&self, _invoice: crate::invoice::Invoice, _pubkey: String) -> Result<()> {
         unimplemented!()
     }
 
-    async fn update_invoice(&self, _invoice: crate::invoice::Invoice) -> Result<()> {
+    async fn update_invoice(&self, _invoice: crate::invoice::Invoice, _pubkey: String) -> Result<()> {
         unimplemented!()
     }
 
