@@ -136,17 +136,20 @@ Return ONLY a JSON array of file paths that need to be examined to fix these err
         
         # Check if file needs changes
         echo "Analyzing file for changes..." | tee -a "$LOG_FILE"
-        response=$(call_deepseek "You are a Rust expert. Given this file:
+        response=$(call_deepseek "You are a Rust expert. Analyze this file and the test failures below.
 
+File: $file
+Content:
 $file_content
 
-And these test failures:
-
+Test failures:
 $error_output
 
-Does this file need changes to fix the failing tests? If yes, provide the complete updated file content. If no, respond with 'NO_CHANGES_NEEDED'.
+IMPORTANT: Your response MUST start with either:
+1. 'NO_CHANGES_NEEDED' if this file does not need changes to fix the failing tests
+2. 'CHANGES:' followed by the complete new file content if changes are needed
 
-Format your response to start with either 'CHANGES:' followed by the new content, or 'NO_CHANGES_NEEDED'.")
+Do not explain or add any other text. Just start with one of those two options.")
         
         # Debug the response
         echo -e "\nAI Response:" >> "$LOG_FILE"
