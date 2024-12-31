@@ -1539,6 +1539,7 @@ name = "oa"
 version = "0.1.0"
 dependencies = [
  "actix-files",
+ "actix-http",
  "actix-web",
  "chrono",
  "config",
@@ -1546,6 +1547,7 @@ dependencies = [
  "secrecy",
  "serde",
  "serde-aux",
+ "serde_json",
  "sqlx",
  "tokio",
  "tracing",
@@ -2881,6 +2883,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f8c5f0a0af699448548ad1a2fbf920fb4bee257eae39953ba95cb84891a0446a"
 dependencies = [
  "getrandom",
+ "serde",
 ]
 
 [[package]]

@@ -13,9 +13,11 @@ name = "oa"
 
 [dependencies]
 actix-web = "4"
+actix-http = "3.0"
 actix-files = "0.6"
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
-serde = "1.0.115"
+serde = { version = "1.0.115", features = ["derive"] }
+serde_json = "1.0"
 config = { version = "0.14", default-features = false, features = ["yaml"] }
 sqlx = { version = "0.8", default-features = false, features = [
     "runtime-tokio-rustls",
@@ -24,8 +26,9 @@ sqlx = { version = "0.8", default-features = false, features = [
     "uuid",
     "chrono",
     "migrate",
+    "json",
 ] }
-uuid = { version = "1", features = ["v4"] }
+uuid = { version = "1", features = ["v4", "serde"] }
 chrono = { version = "0.4.22", default-features = false, features = ["clock"] }
 tracing = "0.1.19"
 tracing-subscriber = { version = "0.3", features = ["registry", "env-filter"] }
