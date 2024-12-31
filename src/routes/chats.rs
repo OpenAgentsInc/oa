@@ -67,6 +67,56 @@ impl header::Header for NostrPubkey {
     }
 }
 
+async fn debug_connection(pool: &PgPool) {
+    match sqlx::query("SELECT current_database(), current_schema(), version()").fetch_one(pool).await {
+        Ok(row) => {
+            let db: &str = row.try_get(0).unwrap_or("unknown");
+            let schema: &str = row.try_get(1).unwrap_or("unknown");
+            let version: &str = row.try_get(2).unwrap_or("unknown");
+            tracing::info!(
+                "Connected to database. DB: {}, Schema: {}, Version: {}",
+                db, schema, version
+            );
+        }
+        Err(e) => {
+            tracing::error!("Failed to get database info: {}", e);
+        }
+    }
+
+    // List all tables in current schema
+    match sqlx::query(
+        "SELECT table_name FROM information_schema.tables WHERE table_schema = current_schema()"
+    ).fetch_all(pool).await {
+        Ok(rows) => {
+            let tables: Vec<String> = rows
+                .iter()
+                .map(|row| row.try_get(0).unwrap_or_default())
+                .collect();
+            tracing::info!("Available tables: {:?}", tables);
+        }
+        Err(e) => {
+            tracing::error!("Failed to list tables: {}", e);
+        }
+    }
+
+    // Check if our specific table exists
+    match sqlx::query(
+        "SELECT EXISTS (
+            SELECT FROM information_schema.tables 
+            WHERE table_schema = current_schema()
+            AND table_name = 'shared_conversations'
+        )"
+    ).fetch_one(pool).await {
+        Ok(row) => {
+            let exists: bool = row.try_get(0).unwrap_or(false);
+            tracing::info!("shared_conversations table exists: {}", exists);
+        }
+        Err(e) => {
+            tracing::error!("Failed to check table existence: {}", e);
+        }
+    }
+}
+
 #[tracing::instrument(
     name = "Storing shared conversation",
     skip(pool, payload),
@@ -83,12 +133,15 @@ async fn store_shared_conversation(
     nostr_pubkey: &NostrPubkey,
     payload: &ShareRequest,
 ) -> Result<Uuid, sqlx::Error> {
-    let id = Uuid::new_v4();
+    // Debug connection before attempting insert
+    debug_connection(pool).await;
 
+    let id = Uuid::new_v4();
+    
     // Convert messages to Value, mapping any JSON error to sqlx::Error
     let messages_json = serde_json::to_value(&payload.messages)
         .map_err(|e| sqlx::Error::Protocol(e.to_string()))?;
-
+    
     let metadata_json = serde_json::json!({
         "messageCount": payload.metadata.message_count,
         "timestamp": payload.metadata.timestamp,
