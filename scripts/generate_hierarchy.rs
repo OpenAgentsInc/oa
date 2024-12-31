@@ -34,7 +34,12 @@ fn get_ignore_patterns(root_dir: &Path) -> Result<Gitignore, Error> {
     // Add .gitignore patterns if they exist
     let gitignore_path = root_dir.join(".gitignore");
     if gitignore_path.exists() {
-        builder.add(&gitignore_path).map_err(Error::Ignore)?;
+        if builder.add(&gitignore_path).is_none() {
+            return Err(Error::Io(io::Error::new(
+                io::ErrorKind::Other,
+                "Failed to add .gitignore patterns"
+            )));
+        }
     }
     
     Ok(builder.build().map_err(Error::Ignore)?)
