@@ -9,17 +9,17 @@ fn build_tree(paths: &[PathBuf], root: &Path) -> String {
     for path in paths {
         let relative = path.strip_prefix(root).unwrap_or(path);
         let depth = relative.components().count();
-        
+
         // Simple indentation based on depth
         let indent = "  ".repeat(depth);
-        
+
         // Get the filename, or use an empty string if we can't get it
         let filename = relative
             .components()
             .last()
             .map(|c| c.as_os_str().to_string_lossy())
             .unwrap_or_default();
-            
+
         output.push_str(&format!("{}├── {}\n", indent, filename));
     }
 
@@ -28,7 +28,7 @@ fn build_tree(paths: &[PathBuf], root: &Path) -> String {
 
 fn main() -> io::Result<()> {
     println!("Starting hierarchy generation...");
-    
+
     let root_dir = Path::new(".").canonicalize()?;
 
     // Create docs directory if it doesn't exist
@@ -47,22 +47,22 @@ fn main() -> io::Result<()> {
     // Collect all paths, filtering out ignored ones
     let mut paths: Vec<PathBuf> = WalkDir::new(&root_dir)
         .into_iter()
-        .filter_map(|e| {
-            match e {
-                Ok(entry) => Some(entry),
-                Err(err) => {
-                    println!("Error walking directory: {:?}", err);
-                    None
-                }
+        .filter_map(|e| match e {
+            Ok(entry) => Some(entry),
+            Err(err) => {
+                println!("Error walking directory: {:?}", err);
+                None
             }
         })
         .filter(|e| {
             let path = e.path();
             let relative = path.strip_prefix(&root_dir).unwrap();
             let path_str = relative.to_string_lossy();
-            
+
             // Skip ignored patterns
-            !ignore_patterns.iter().any(|pattern| path_str.contains(pattern))
+            !ignore_patterns
+                .iter()
+                .any(|pattern| path_str.contains(pattern))
         })
         .map(|e| e.path().to_owned())
         .collect();

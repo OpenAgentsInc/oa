@@ -9,6 +9,7 @@ Our main website & web app.
 - `docker build --tag oa .`
 - `DATABASE_URL=postgres://... cargo sqlx migrate run`
 - `DATABASE_URL=postgresql://postgres:password@127.0.0.1:5432/newsletter cargo sqlx prepare --workspace -- --all-targets`
+- `cargo run --bin generate-hierarchy`
 
 ## Development Setup
 
