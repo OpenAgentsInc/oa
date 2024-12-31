@@ -1,7 +1,8 @@
+
 use crate::error::Result;
 use crate::event::{single_char_tagname, Event};
 use crate::utils::{is_hex, is_lower_hex};
-use chrono::Utc;
+use chrono::{TimeZone, Utc};
 use sqlx::QueryBuilder;
 use std::time::Instant;
 use tracing::info;
@@ -26,7 +27,7 @@ impl super::PostgresRepo {
                 "SELECT e.id FROM event e WHERE e.pub_key=$1 AND e.kind=$2 AND e.created_at >= $3 LIMIT 1;")
                 .bind(&pubkey_blob)
                 .bind(e.kind as i64)
-                .bind(Utc.timestamp_opt(e.created_at as i64, 0).unwrap())
+                .bind(Utc.timestamp(e.created_at as i64, 0))
                 .fetch_optional(&mut *tx)
                 .await?;
             if repl_count.is_some() {
@@ -40,7 +41,7 @@ impl super::PostgresRepo {
                     .bind(hex::decode(&e.pubkey).ok())
                     .bind(e.kind as i64)
                     .bind(hex::decode(d_tag).ok())
-                    .bind(Utc.timestamp_opt(e.created_at as i64, 0).unwrap())
+                    .bind(Utc.timestamp(e.created_at as i64, 0))
                     .fetch_one(&mut *tx)
                     .await?
             } else {
@@ -49,7 +50,7 @@ impl super::PostgresRepo {
                     .bind(hex::decode(&e.pubkey).ok())
                     .bind(e.kind as i64)
                     .bind(d_tag.as_bytes())
-                    .bind(Utc.timestamp_opt(e.created_at as i64, 0).unwrap())
+                    .bind(Utc.timestamp(e.created_at as i64, 0))
                     .fetch_one(&mut *tx)
                     .await?
             };
@@ -69,10 +70,10 @@ ON CONFLICT (id) DO NOTHING"#,
         )
         .bind(&id_blob)
         .bind(&pubkey_blob)
-        .bind(Utc.timestamp_opt(e.created_at as i64, 0).unwrap())
+        .bind(Utc.timestamp(e.created_at as i64, 0))
         .bind(
             e.expiration()
-                .and_then(|x| Utc.timestamp_opt(x as i64, 0).latest()),
+                .and_then(|x| Utc.timestamp_opt(x as i64, 0).single()),
         )
         .bind(e.kind as i64)
         .bind(event_str.into_bytes())
