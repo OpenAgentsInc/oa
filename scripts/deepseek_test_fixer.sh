@@ -18,10 +18,18 @@ extract_errors() {
     echo "$1" | grep -A 1 "error\[E[0-9]*\]:\|error: " | head -n 20
 }
 
+# Function to escape string for JSON
+escape_json() {
+    echo "$1" | jq -R -s '.'
+}
+
 # Function to call Deepseek API and handle response
 call_deepseek() {
     local prompt="$1"
     echo -e "\nSending to Deepseek:\n---\n$prompt\n---"
+    
+    # Escape the prompt for JSON
+    local escaped_prompt=$(escape_json "$prompt")
     
     local response
     response=$(curl -s "$DEEPSEEK_API_URL" \
@@ -29,7 +37,7 @@ call_deepseek() {
         -H "Authorization: Bearer $DEEPSEEK_API_KEY" \
         -d "{
             \"model\": \"deepseek-chat\",
-            \"messages\": [{\"role\": \"user\", \"content\": \"$prompt\"}],
+            \"messages\": [{\"role\": \"user\", \"content\": ${escaped_prompt}}],
             \"stream\": false
         }")
     
@@ -53,7 +61,7 @@ MAX_ITERATIONS=5
 iteration=1
 
 while [ $iteration -le $MAX_ITERATIONS ]; do
-    echo -e "\n=== Iteration $iteration of $MAX_ITERATIONS ==="
+    echo -e "\n=== Iteration $iteration of $MAX_ITERATIONS ===\n"
     
     # Run tests and capture output
     echo "Running tests..."
