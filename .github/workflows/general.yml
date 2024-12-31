@@ -78,6 +78,8 @@ jobs:
           SKIP_DOCKER=true ./scripts/init_db.sh
 
       - name: Run tests
+        env:
+          DATABASE_URL: "postgresql://postgres:password@localhost:5432/newsletter"
         run: cargo test
 
       - name: Check that queries are fresh
