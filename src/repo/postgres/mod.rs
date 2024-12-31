@@ -60,9 +60,7 @@ async fn delete_expired(conn: PostgresPool) -> Result<u64> {
     let mut tx = conn.begin().await?;
     let update_count = sqlx::query("DELETE FROM \"event\" WHERE expires_at <= $1;")
         .bind(
-            chrono::Utc
-                .timestamp(crate::utils::unix_time() as i64, 0)
-                .unwrap(),
+            chrono::Utc::now(),
         )
         .execute(&mut *tx)
         .await?
