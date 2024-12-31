@@ -18,18 +18,10 @@ extract_errors() {
     echo "$1" | grep -A 1 "error\[E[0-9]*\]:\|error: " | head -n 20
 }
 
-# Function to escape string for JSON
-escape_json() {
-    echo "$1" | jq -R -s '.'
-}
-
 # Function to call Deepseek API and handle response
 call_deepseek() {
     local prompt="$1"
     echo -e "\nSending to Deepseek:\n---\n$prompt\n---"
-    
-    # Escape the prompt for JSON
-    local escaped_prompt=$(escape_json "$prompt")
     
     local response
     response=$(curl -s "$DEEPSEEK_API_URL" \
@@ -37,7 +29,7 @@ call_deepseek() {
         -H "Authorization: Bearer $DEEPSEEK_API_KEY" \
         -d "{
             \"model\": \"deepseek-chat\",
-            \"messages\": [{\"role\": \"user\", \"content\": ${escaped_prompt}}],
+            \"messages\": [{\"role\": \"user\", \"content\": \"$prompt\"}],
             \"stream\": false
         }")
     
@@ -102,19 +94,8 @@ Return ONLY a JSON array of file paths that need to be examined to fix these err
         continue
     fi
     
-    # Validate JSON array
-    if ! echo "$files_to_check" | jq -e 'if type == "array" then . else null end' >/dev/null 2>&1; then
-        echo -e "\nInvalid JSON array from Deepseek:"
-        echo "$files_to_check"
-        echo "Skipping iteration..."
-        ((iteration++))
-        continue
-    fi
-    
-    echo -e "\nProcessing files: $files_to_check"
-    
     # Process each file from the JSON array
-    echo "$files_to_check" | jq -r '.[]' | while read -r file; do
+    for file in $(echo "$files_to_check" | jq -r '.[]'); do
         echo -e "\nAnalyzing $file..."
         
         if [ ! -f "$file" ]; then
