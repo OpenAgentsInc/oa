@@ -24,6 +24,7 @@
     ├── production.yaml
   ├── docs
     ├── chat-sharing.md
+    ├── deepseek-fixer-log.md
     ├── githooks.md
     ├── hierarchy.md
     ├── sync-engine-roadmap.md
@@ -48,6 +49,7 @@
     ├── principles.html
     ├── style.css
   ├── scripts
+    ├── deepseek_test_fixer.sh
     ├── generate_hierarchy.rs
     ├── generate_hierarchy.sh
     ├── init_db.sh

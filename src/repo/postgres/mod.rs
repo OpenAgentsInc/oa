@@ -1,3 +1,4 @@
+
 pub mod account;
 pub mod event;
 pub mod invoice;
@@ -85,5 +86,65 @@ impl crate::repo::NostrRepo for PostgresRepo {
     async fn optimize_db(&self) -> Result<()> {
         // Not implemented for Postgres
         Ok(())
+    }
+
+    async fn write_event(&self, _event: crate::event::Event) -> Result<()> {
+        unimplemented!()
+    }
+
+    async fn query_subscription(&self, _filter: crate::filter::Filter) -> Result<Vec<crate::event::Event>> {
+        unimplemented!()
+    }
+
+    async fn create_verification_record(&self, _pubkey: String, _code: String) -> Result<()> {
+        unimplemented!()
+    }
+
+    async fn update_verification_timestamp(&self, _pubkey: String) -> Result<()> {
+        unimplemented!()
+    }
+
+    async fn fail_verification(&self, _pubkey: String) -> Result<()> {
+        unimplemented!()
+    }
+
+    async fn delete_verification(&self, _pubkey: String) -> Result<()> {
+        unimplemented!()
+    }
+
+    async fn get_latest_user_verification(&self, _pubkey: String) -> Result<Option<crate::verification::Verification>> {
+        unimplemented!()
+    }
+
+    async fn get_oldest_user_verification(&self, _pubkey: String) -> Result<Option<crate::verification::Verification>> {
+        unimplemented!()
+    }
+
+    async fn create_account(&self, _pubkey: String) -> Result<()> {
+        unimplemented!()
+    }
+
+    async fn admit_account(&self, _pubkey: String) -> Result<()> {
+        unimplemented!()
+    }
+
+    async fn get_account_balance(&self, _pubkey: String) -> Result<u64> {
+        unimplemented!()
+    }
+
+    async fn update_account_balance(&self, _pubkey: String, _amount: i64) -> Result<()> {
+        unimplemented!()
+    }
+
+    async fn create_invoice_record(&self, _invoice: crate::invoice::Invoice) -> Result<()> {
+        unimplemented!()
+    }
+
+    async fn update_invoice(&self, _invoice: crate::invoice::Invoice) -> Result<()> {
+        unimplemented!()
+    }
+
+    async fn get_unpaid_invoice(&self, _pubkey: String) -> Result<Option<crate::invoice::Invoice>> {
+        unimplemented!()
     }
 }
