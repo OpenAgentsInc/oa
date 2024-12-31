@@ -31,7 +31,6 @@ call_deepseek() {
             \"stream\": false
         }")
     
-    # Check if response contains choices array
     if echo "$response" | jq -e '.choices[0].message.content' >/dev/null 2>&1; then
         echo "$response" | jq -r '.choices[0].message.content'
     else
@@ -41,24 +40,13 @@ call_deepseek() {
     fi
 }
 
-# Update hierarchy
+# Update hierarchy for context
 echo "Updating hierarchy..."
 ./scripts/generate_hierarchy.sh
 
 # Main loop
 MAX_ITERATIONS=5
 iteration=1
-
-# Set required environment variables and create directories
-export OUT_DIR="target/out"
-mkdir -p "$OUT_DIR"
-
-# First, try to fix the nauthz.rs issue
-if [ ! -f "$OUT_DIR/nauthz.rs" ]; then
-    echo "Creating empty nauthz.rs file..."
-    mkdir -p "$(dirname "$OUT_DIR/nauthz.rs")"
-    touch "$OUT_DIR/nauthz.rs"
-fi
 
 while [ $iteration -le $MAX_ITERATIONS ]; do
     echo "Iteration $iteration of $MAX_ITERATIONS"
@@ -87,27 +75,19 @@ while [ $iteration -le $MAX_ITERATIONS ]; do
     prompt="Given these test failures:\n$error_output\n\nAnd this project hierarchy:\n$hierarchy_content\n\nAnalyze the test failures and return ONLY a JSON array of file paths that need to be examined, like this: [\"src/file1.rs\",\"src/file2.rs\"]. Return ONLY the JSON array, no other text."
     
     files_to_check=$(call_deepseek "$prompt")
-    if [[ $files_to_check == ERROR:* ]]; then
-        echo "Failed to get file list from Deepseek. Retrying with default file list..."
-        # Use the file mentioned in the error message as fallback
-        files_to_check='["src/nauthz.rs"]'
+    if [[ $files_to_check == ERROR:* ]] || ! echo "$files_to_check" | jq -e 'if type == "array" then true else false end' >/dev/null 2>&1; then
+        echo "Failed to get valid file list from Deepseek, skipping iteration..."
+        ((iteration++))
+        continue
     fi
     
     echo "Files to examine: $files_to_check"
     
-    # Validate JSON array and split into array
-    if ! echo "$files_to_check" | jq -e 'if type == "array" then true else false end' >/dev/null 2>&1; then
-        echo "Invalid JSON array from Deepseek. Using default file list..."
-        files_to_check='["src/nauthz.rs"]'
-    fi
-    
-    # Convert JSON array to bash array
-    readarray -t files_array < <(echo "$files_to_check" | jq -r '.[]')
-    
-    for file in "${files_array[@]}"; do
+    # Process each file
+    while IFS= read -r file; do
+        file=$(echo "$file" | tr -d '"' | tr -d ',')
         echo "Analyzing $file..."
         
-        # Skip if file doesn't exist
         if [ ! -f "$file" ]; then
             echo "File $file not found, skipping..."
             continue
@@ -160,7 +140,7 @@ while [ $iteration -le $MAX_ITERATIONS ]; do
             git add "$file"
             git commit -m "$explanation" -n
         fi
-    done
+    done < <(echo "$files_to_check" | jq -r '.[]')
     
     ((iteration++))
 done
