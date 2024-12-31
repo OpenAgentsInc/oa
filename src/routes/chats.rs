@@ -84,11 +84,11 @@ async fn store_shared_conversation(
     payload: &ShareRequest,
 ) -> Result<Uuid, sqlx::Error> {
     let id = Uuid::new_v4();
-    
+
     // Convert messages to Value, mapping any JSON error to sqlx::Error
     let messages_json = serde_json::to_value(&payload.messages)
         .map_err(|e| sqlx::Error::Protocol(e.to_string()))?;
-    
+
     let metadata_json = serde_json::json!({
         "messageCount": payload.metadata.message_count,
         "timestamp": payload.metadata.timestamp,
