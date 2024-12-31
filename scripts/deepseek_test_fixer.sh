@@ -135,6 +135,7 @@ Return ONLY a JSON array of file paths that need to be examined to fix these err
         file_content=$(cat "$file")
         
         # Check if file needs changes
+        echo "Analyzing file for changes..." | tee -a "$LOG_FILE"
         response=$(call_deepseek "You are a Rust expert. Given this file:
 
 $file_content
@@ -147,12 +148,16 @@ Does this file need changes to fix the failing tests? If yes, provide the comple
 
 Format your response to start with either 'CHANGES:' followed by the new content, or 'NO_CHANGES_NEEDED'.")
         
+        # Debug the response
+        echo -e "\nAI Response:" >> "$LOG_FILE"
+        echo '```' >> "$LOG_FILE"
+        echo "$response" >> "$LOG_FILE"
+        echo '```' >> "$LOG_FILE"
+        
         if [[ "$response" == NO_CHANGES_NEEDED* ]]; then
             echo "✓ SKIPPING: No changes needed" | tee -a "$LOG_FILE"
             continue
-        fi
-        
-        if [[ "$response" == CHANGES:* ]]; then
+        elif [[ "$response" == CHANGES:* ]]; then
             # Get new content
             new_content="${response#CHANGES:}"
             
@@ -178,7 +183,8 @@ Format your response to start with either 'CHANGES:' followed by the new content
             ((changes_made++))
             echo "✅ Changes committed" | tee -a "$LOG_FILE"
         else
-            echo "⚠️ ERROR: Unexpected response from AI" | tee -a "$LOG_FILE"
+            echo "⚠️ ERROR: AI response did not start with CHANGES: or NO_CHANGES_NEEDED" | tee -a "$LOG_FILE"
+            echo "Response was: ${response:0:100}..." | tee -a "$LOG_FILE"
         fi
     done
     
