@@ -5,5 +5,8 @@
   ],
   "src/repo/postgres/mod.rs": [
     "b18a0296b48239ac9f990cc197efe1453692bddbd0b1259f14534db5c1954d69"
+  ],
+  "src/nauthz.rs": [
+    "aaff62df7e2d93f12436fd3a55abfdc8d1b2b9acbf50d4c24e23f1e9c2eef884"
   ]
 }

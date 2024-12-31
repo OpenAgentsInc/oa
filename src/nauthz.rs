@@ -1,9 +1,10 @@
 
+
 use crate::error::{Error, Result};
 use crate::{event::Event, nip05::Nip05Name};
 use nauthz_grpc::authorization_client::AuthorizationClient;
 use nauthz_grpc::event::TagEntry;
-use nauthz_grpc::{Decision, Event as GrpcEvent, EventReply, EventRequest};
+use nauthz_grpc::{Decision, Event as GrpcEvent, EventReply, EventRequest, Nip05Name as GrpcNip05Name};
 use tracing::{info, warn};
 
 pub mod nauthz_grpc {
@@ -32,9 +33,9 @@ pub struct EventAuthzService {
 }
 
 // conversion of Nip05Names into GRPC type
-impl std::convert::From<Nip05Name> for nauthz_grpc::Nip05Name {
+impl std::convert::From<Nip05Name> for GrpcNip05Name {
     fn from(value: Nip05Name) -> Self {
-        nauthz_grpc::Nip05Name {
+        GrpcNip05Name {
             local: value.local.clone(),
             domain: value.domain,
         }
@@ -100,7 +101,7 @@ impl EventAuthzService {
                     origin,
                     user_agent,
                     auth_pubkey,
-                    nip05: nip05.map(nauthz_grpc::Nip05Name::from),
+                    nip05: nip05.map(GrpcNip05Name::from),
                 })
                 .await?;
             let reply = svr_res.into_inner();
