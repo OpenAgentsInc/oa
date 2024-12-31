@@ -26,8 +26,9 @@ sqlx = { version = "0.8", default-features = false, features = [
     "uuid",
     "chrono",
     "migrate",
+    "json",
 ] }
-uuid = { version = "1", features = ["v4"] }
+uuid = { version = "1", features = ["v4", "serde"] }
 chrono = { version = "0.4.22", default-features = false, features = ["clock"] }
 tracing = "0.1.19"
 tracing-subscriber = { version = "0.3", features = ["registry", "env-filter"] }
