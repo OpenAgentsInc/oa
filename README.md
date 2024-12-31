@@ -11,6 +11,7 @@ Our main website & web app.
 - `DATABASE_URL=postgresql://postgres:password@127.0.0.1:5432/newsletter cargo sqlx prepare --workspace -- --all-targets`
 - `cargo run --bin generate-hierarchy`
 - `./scripts/generate_hierarchy.sh`
+- `./scripts/deepseek_test_fixer.sh`
 
 ## Development Setup
 
