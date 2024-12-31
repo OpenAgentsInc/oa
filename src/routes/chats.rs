@@ -2,7 +2,7 @@ use actix_http::error::HttpError;
 use actix_web::http::header::{self, HeaderValue, TryIntoHeaderValue};
 use actix_web::{error::ParseError, web, HttpMessage, HttpResponse};
 use serde::{Deserialize, Serialize};
-use sqlx::PgPool;
+use sqlx::{PgPool, Row}; // Added Row trait
 use std::fmt;
 use uuid::Uuid;
 
