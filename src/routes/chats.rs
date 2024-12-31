@@ -5,6 +5,7 @@ use std::fmt;
 use actix_http::error::HttpError;
 
 #[derive(Deserialize)]
+#[allow(dead_code)]
 pub struct ShareRequest {
     recipient: String,
     messages: Vec<ChatMessage>,
@@ -12,6 +13,7 @@ pub struct ShareRequest {
 }
 
 #[derive(Deserialize)]
+#[allow(dead_code)]
 pub struct ChatMessage {
     id: String,
     role: String,
@@ -22,6 +24,7 @@ pub struct ChatMessage {
 }
 
 #[derive(Deserialize)]
+#[allow(dead_code)]
 pub struct ShareMetadata {
     #[serde(rename = "messageCount")]
     message_count: usize,
