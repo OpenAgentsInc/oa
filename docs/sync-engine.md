@@ -2,162 +2,217 @@
 
 ## Overview
 
-The sync engine enables real-time data synchronization between the Onyx mobile app and OpenAgents.com backend using WebSocket connections authenticated with Nostr keys.
+The sync engine enables real-time data synchronization between the Onyx mobile app and OpenAgents.com backend using WebSocket connections authenticated with Nostr keys, following NIP-42 for authentication and NIP-01 for event handling.
 
-## Authentication Flow
+## Authentication Flow (NIP-42)
 
-1. User connects via WebSocket from Onyx app
-2. Initial handshake includes signed message with user's Nostr pubkey
-3. Server verifies signature and establishes authenticated session
-4. All subsequent messages are signed using the same key
+1. Client connects via WebSocket to `wss://openagents.com/sync`
+2. Server sends challenge: `["AUTH", "<random-challenge>"]`
+3. Client creates and signs auth event:
+```json
+{
+  "kind": 22242,
+  "created_at": <timestamp>,
+  "tags": [
+    ["relay", "wss://openagents.com/sync"],
+    ["challenge", "<challenge-string>"]
+  ],
+  "pubkey": "<user-npub>",
+  // other fields per NIP-01
+}
+```
+4. Client sends: `["AUTH", <signed-event-json>]`
+5. Server verifies and responds: `["OK", <event-id>, true, ""]`
 
-## Message Protocol
+## Sync Events (NIP-01)
 
-### Connection Establishment
+### Event Types
 ```typescript
-// Client -> Server
-interface ConnectMessage {
-  type: "connect";
-  pubkey: string;  // npub...
-  timestamp: number;
-  signature: string;  // Signed {pubkey, timestamp} 
+interface SyncEvent {
+  kind: number;  // Using Nostr kind ranges
+  pubkey: string;
+  created_at: number;
+  content: string;
+  tags: string[][];
+  id: string;
+  sig: string;
 }
 
-// Server -> Client
-interface ConnectResponse {
-  type: "connect_ack";
-  session_id: string;
-  timestamp: number;
-  signature: string;  // Server signs {session_id, timestamp}
+// Event kinds:
+const KINDS = {
+  CHAT_UPDATE: 30001,      // Addressable chat updates
+  SETTINGS_UPDATE: 10001,  // Replaceable settings
+  TRAINING_DATA: 1,        // Regular training data contributions
 }
 ```
 
-### Data Sync Messages
-```typescript
-interface SyncMessage {
-  type: "sync";
-  session_id: string;
-  timestamp: number;
-  signature: string;
-  payload: {
-    entity: "chat" | "settings" | "training_data";
-    action: "create" | "update" | "delete";
-    data: any;
-    version: number;
-  }
+### Chat Updates
+```json
+{
+  "kind": 30001,
+  "content": "{\"messages\": [...], \"metadata\": {...}}",
+  "tags": [
+    ["d", "<chat-id>"],
+    ["p", "<recipient-pubkey>", "<recommended-relay>"]
+  ]
 }
 ```
 
-## Sync Entities
-
-### Chats
-- Full chat history
-- Message metadata
-- Sharing permissions
-- Training data opt-in status
-
-### User Settings 
-- Preferences
-- Pro subscription status
-- Feature flags
-- UI customizations
+### Settings Updates
+```json
+{
+  "kind": 10001,
+  "content": "{\"preferences\": {...}, \"features\": [...]}",
+  "tags": [
+    ["d", "settings"]
+  ]
+}
+```
 
 ### Training Data
-- Contributed messages
-- Quality ratings
-- Reward status
-- Usage permissions
+```json
+{
+  "kind": 1,
+  "content": "<message-content>",
+  "tags": [
+    ["t", "training"],
+    ["quality", "<rating>"]
+  ]
+}
+```
 
-## Versioning & Conflict Resolution
+## Subscription Flow
 
-1. Each entity maintains a version number
-2. Server is source of truth for version conflicts
-3. Client sends current version with updates
-4. Server rejects updates with outdated versions
-5. Client must fetch latest before retrying update
+1. Client subscribes to relevant events:
+```json
+["REQ", "sub1", {
+  "authors": ["<user-pubkey>"],
+  "kinds": [30001, 10001, 1],
+  "#d": ["<chat-id>", "settings"]
+}]
+```
 
-## Error Handling
+2. Server streams matching events:
+```json
+["EVENT", "sub1", {
+  "kind": 30001,
+  "content": "...",
+  // ...other event fields
+}]
+```
 
-1. Connection drops
-   - Client queues changes locally
-   - Automatic reconnection with exponential backoff
-   - Replay missed changes on reconnect
-
-2. Version conflicts
-   - Server returns current version
-   - Client fetches latest
-   - Merges changes if possible
-   - Prompts user for resolution if needed
-
-3. Invalid signatures
-   - Connection terminated
-   - Client must re-authenticate
+3. Server indicates end of stored events:
+```json
+["EOSE", "sub1"]
+```
 
 ## Implementation Notes
 
 ### Server (Rust)
 ```rust
-// In src/routes/websocket.rs
-pub struct WebSocketConnection {
+pub struct SyncConnection {
     pub session_id: String,
     pub pubkey: String,
+    pub subscriptions: HashMap<String, Filter>,
     pub last_seen: DateTime<Utc>,
-    pub pending_messages: Vec<SyncMessage>,
 }
 
-impl WebSocketConnection {
-    pub fn verify_signature(&self, msg: &SyncMessage) -> bool {
-        // Verify Nostr signature
+impl SyncConnection {
+    pub fn handle_auth(&mut self, event: Event) -> Result<()> {
+        // Verify NIP-42 auth event
+        if event.kind != 22242 {
+            return Err(Error::InvalidAuth);
+        }
+        // Verify challenge, relay URL, timestamp
+        // Set authenticated state
     }
     
-    pub fn handle_message(&mut self, msg: SyncMessage) -> Result<()> {
-        // Process incoming sync message
+    pub fn handle_event(&mut self, event: Event) -> Result<()> {
+        // Validate event signature (NIP-01)
+        // Process based on kind
+        match event.kind {
+            30001 => self.handle_chat_update(event),
+            10001 => self.handle_settings_update(event),
+            1 => self.handle_training_data(event),
+            _ => Err(Error::UnsupportedKind)
+        }
     }
 }
 ```
 
 ### Client (React Native)
 ```typescript
-// In services/sync.ts
 class SyncService {
   private ws: WebSocket;
-  private queue: SyncMessage[] = [];
+  private subscriptions: Map<string, Filter>;
   
   constructor(private nostrKeys: NostrKeys) {}
   
   async connect() {
     this.ws = new WebSocket('wss://openagents.com/sync');
-    // Setup handlers & auth
+    this.ws.onmessage = this.handleMessage;
+    await this.authenticate();
   }
   
-  async syncEntity(entity: string, action: string, data: any) {
-    // Queue & send sync message
+  private async authenticate() {
+    // Handle NIP-42 auth flow
+    const challenge = await this.waitForChallenge();
+    const authEvent = this.createAuthEvent(challenge);
+    const signedEvent = await this.nostrKeys.signEvent(authEvent);
+    this.ws.send(['AUTH', signedEvent]);
+  }
+  
+  async syncChat(chatId: string, data: any) {
+    const event = {
+      kind: 30001,
+      content: JSON.stringify(data),
+      tags: [
+        ['d', chatId],
+        // other tags...
+      ],
+      created_at: Math.floor(Date.now() / 1000)
+    };
+    const signedEvent = await this.nostrKeys.signEvent(event);
+    this.ws.send(['EVENT', signedEvent]);
   }
 }
 ```
 
 ## Security Considerations
 
-1. All messages signed with Nostr keys
-2. TLS for transport security
-3. Session IDs rotated periodically
-4. Rate limiting per connection
-5. Message size limits
-6. Timeout for inactive connections
+1. All messages signed with Nostr keys (NIP-01)
+2. Auth challenges per NIP-42
+3. TLS for transport security
+4. Rate limiting per pubkey
+5. Event size limits
+6. Subscription limits per connection
+
+## Error Handling
+
+1. Connection drops:
+   - Queue changes locally
+   - Exponential backoff reconnection
+   - Resubscribe on reconnect
+   - Replay missed events
+
+2. Auth failures:
+   - Invalid challenge response
+   - Expired timestamps
+   - Invalid signatures
+   - Rate limits
+
+3. Event validation:
+   - Invalid kinds
+   - Schema validation
+   - Permission checks
+   - Version conflicts
 
 ## Future Enhancements
 
-1. Batch sync operations
+1. Batch operations (multiple events)
 2. Compression for large payloads
-3. Partial sync for large datasets
-4. Multiple device sync
+3. Partial sync filters
+4. Multi-device sync
 5. Offline-first capabilities
-6. End-to-end encryption option
-
-## Testing Strategy
-
-1. Unit tests for message handling
-2. Integration tests for sync flows
-3. Stress tests for concurrent connections
-4. Chaos testing for network issues
-5. Security audit of auth flow
+6. End-to-end encryption
+7. Relay federation
