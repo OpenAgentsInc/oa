@@ -4,7 +4,7 @@ use actix_web::{error::ParseError, web, HttpMessage, HttpResponse};
 use serde::{Deserialize, Serialize};
 use sqlx::{PgPool, Row};
 use std::fmt;
-use tracing::{info, error, Level};
+use tracing::{error, info};
 use uuid::Uuid;
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -71,7 +71,7 @@ impl header::Header for NostrPubkey {
 #[tracing::instrument(level = "info", name = "Checking database connection")]
 async fn debug_connection(pool: &PgPool) {
     info!("Starting database connection check");
-    
+
     // Get connection info
     match sqlx::query("SELECT current_database(), current_schema(), version(), current_user, inet_server_addr(), inet_server_port()").fetch_one(pool).await {
         Ok(row) => {
@@ -81,7 +81,7 @@ async fn debug_connection(pool: &PgPool) {
             let user: &str = row.try_get(3).unwrap_or("unknown");
             let addr: Option<String> = row.try_get(4).unwrap_or(None);
             let port: Option<i32> = row.try_get(5).unwrap_or(None);
-            
+
             info!(
                 database = %db,
                 schema = %schema,
@@ -119,30 +119,41 @@ async fn debug_connection(pool: &PgPool) {
     // Check if our specific table exists and show its definition
     match sqlx::query(
         "SELECT EXISTS (
-            SELECT FROM information_schema.tables 
+            SELECT FROM information_schema.tables
             WHERE table_schema = current_schema()
             AND table_name = 'shared_conversations'
-        )"
-    ).fetch_one(pool).await {
+        )",
+    )
+    .fetch_one(pool)
+    .await
+    {
         Ok(row) => {
             let exists: bool = row.try_get(0).unwrap_or(false);
-            info!(exists = exists, "Checked shared_conversations table existence");
-            
+            info!(
+                exists = exists,
+                "Checked shared_conversations table existence"
+            );
+
             if exists {
                 // If table exists, show its definition
                 match sqlx::query(
-                    "SELECT column_name, data_type, is_nullable 
-                     FROM information_schema.columns 
-                     WHERE table_name = 'shared_conversations'"
-                ).fetch_all(pool).await {
+                    "SELECT column_name, data_type, is_nullable
+                     FROM information_schema.columns
+                     WHERE table_name = 'shared_conversations'",
+                )
+                .fetch_all(pool)
+                .await
+                {
                     Ok(columns) => {
                         let column_info: Vec<(String, String, String)> = columns
                             .iter()
-                            .map(|col| (
-                                col.try_get(0).unwrap_or_default(),
-                                col.try_get(1).unwrap_or_default(),
-                                col.try_get(2).unwrap_or_default()
-                            ))
+                            .map(|col| {
+                                (
+                                    col.try_get(0).unwrap_or_default(),
+                                    col.try_get(1).unwrap_or_default(),
+                                    col.try_get(2).unwrap_or_default(),
+                                )
+                            })
                             .collect();
                         info!(columns = ?column_info, "Table structure");
                     }
@@ -177,20 +188,19 @@ async fn store_shared_conversation(
     payload: &ShareRequest,
 ) -> Result<Uuid, sqlx::Error> {
     info!("Starting shared conversation storage");
-    
+
     // Debug connection before attempting insert
     debug_connection(pool).await;
 
     let id = Uuid::new_v4();
     info!(share_id = %id, "Generated UUID for share");
-    
+
     // Convert messages to Value, mapping any JSON error to sqlx::Error
-    let messages_json = serde_json::to_value(&payload.messages)
-        .map_err(|e| {
-            error!(error = %e, "Failed to serialize messages to JSON");
-            sqlx::Error::Protocol(e.to_string())
-        })?;
-    
+    let messages_json = serde_json::to_value(&payload.messages).map_err(|e| {
+        error!(error = %e, "Failed to serialize messages to JSON");
+        sqlx::Error::Protocol(e.to_string())
+    })?;
+
     let metadata_json = serde_json::json!({
         "messageCount": payload.metadata.message_count,
         "timestamp": payload.metadata.timestamp,
@@ -212,7 +222,7 @@ async fn store_shared_conversation(
     info!("Attempting database insert");
     let result = sqlx::query!(
         r#"
-        INSERT INTO shared_conversations 
+        INSERT INTO shared_conversations
         (id, chat_id, sender_npub, recipient_npub, message_count, messages, metadata)
         VALUES ($1, $2, $3, $4, $5, $6, $7)
         RETURNING id
@@ -229,7 +239,7 @@ async fn store_shared_conversation(
     .await;
 
     match result {
-        Ok(row) => {
+        Ok(_) => {
             info!(share_id = %id, "Successfully stored shared conversation");
             Ok(id)
         }
@@ -261,13 +271,13 @@ pub async fn share_chat(
                 "message": "Chat shared successfully",
                 "share_id": share_id.to_string()
             }))
-        },
+        }
         Err(e) => {
             error!(error = %e, "Share failed");
             HttpResponse::InternalServerError().json(serde_json::json!({
                 "status": "error",
                 "message": "Failed to store shared conversation"
             }))
-        },
+        }
     }
 }
