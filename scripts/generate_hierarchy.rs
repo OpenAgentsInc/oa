@@ -19,13 +19,15 @@ fn build_tree(paths: &[PathBuf], root: &Path) -> String {
         
         // Simple indentation based on depth
         let indent = "  ".repeat(depth);
-        output.push_str(&format!("{}├── {}\n", 
-            indent,
-            relative.components().last()
-                .unwrap_or_default()
-                .as_os_str()
-                .to_string_lossy()
-        ));
+        
+        // Get the filename, or use an empty string if we can't get it
+        let filename = relative
+            .components()
+            .last()
+            .map(|c| c.as_os_str().to_string_lossy())
+            .unwrap_or_default();
+            
+        output.push_str(&format!("{}├── {}\n", indent, filename));
     }
 
     output
