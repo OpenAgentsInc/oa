@@ -1,6 +1,6 @@
 use actix_web::{web, HttpResponse, HttpMessage, error::ParseError};
 use serde::Deserialize;
-use actix_web::http::header::{self, HeaderValue};
+use actix_web::http::header::{self, HeaderValue, TryIntoHeaderValue};
 use std::fmt;
 
 #[derive(Deserialize)]
@@ -33,6 +33,15 @@ pub struct NostrPubkey(String);
 impl fmt::Display for NostrPubkey {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.0)
+    }
+}
+
+impl TryIntoHeaderValue for NostrPubkey {
+    type Error = actix_web::error::ParseError;
+
+    fn try_into_value(self) -> Result<HeaderValue, Self::Error> {
+        HeaderValue::from_str(&self.0)
+            .map_err(|_| ParseError::Header)
     }
 }
 
