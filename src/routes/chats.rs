@@ -1,8 +1,8 @@
-use actix_web::{web, HttpResponse, HttpMessage, error::ParseError};
-use serde::Deserialize;
-use actix_web::http::header::{self, HeaderValue, TryIntoHeaderValue};
-use std::fmt;
 use actix_http::error::HttpError;
+use actix_web::http::header::{self, HeaderValue, TryIntoHeaderValue};
+use actix_web::{error::ParseError, web, HttpMessage, HttpResponse};
+use serde::Deserialize;
+use std::fmt;
 
 #[derive(Deserialize)]
 #[allow(dead_code)]
@@ -44,8 +44,7 @@ impl TryIntoHeaderValue for NostrPubkey {
     type Error = HttpError;
 
     fn try_into_value(self) -> Result<HeaderValue, Self::Error> {
-        HeaderValue::from_str(&self.0)
-            .map_err(|e| e.into())
+        HeaderValue::from_str(&self.0).map_err(|e| e.into())
     }
 }
 
@@ -55,14 +54,13 @@ impl header::Header for NostrPubkey {
     }
 
     fn parse<M: HttpMessage>(msg: &M) -> Result<Self, ParseError> {
-        let header = msg.headers()
+        let header = msg
+            .headers()
             .get("x-nostr-pubkey")
             .ok_or(ParseError::Header)?;
-        
-        let value = header.to_str()
-            .map_err(|_| ParseError::Header)?
-            .to_string();
-            
+
+        let value = header.to_str().map_err(|_| ParseError::Header)?.to_string();
+
         Ok(NostrPubkey(value))
     }
 }
@@ -78,7 +76,7 @@ pub async fn share_chat(
         payload.messages.len(),
         chat_id
     );
-    
+
     HttpResponse::Ok().json(serde_json::json!({
         "status": "success",
         "message": "Chat shared successfully"
