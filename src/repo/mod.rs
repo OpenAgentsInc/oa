@@ -1,4 +1,3 @@
-use crate::db::QueryResult;
 use crate::error::Result;
 use crate::event::Event;
 use crate::nip05::VerificationRecord;
@@ -11,6 +10,17 @@ use rand::Rng;
 
 pub mod postgres;
 pub mod postgres_migration;
+
+pub use postgres::{PostgresPool, PostgresRepo};
+
+/// Serialized event associated with a specific subscription request.
+#[derive(PartialEq, Eq, Debug, Clone)]
+pub struct QueryResult {
+    /// Subscription identifier
+    pub sub_id: String,
+    /// Serialized event
+    pub event: String,
+}
 
 #[async_trait]
 pub trait NostrRepo: Send + Sync {
