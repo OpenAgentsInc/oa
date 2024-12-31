@@ -32,9 +32,9 @@ pub struct EventAuthzService {
 }
 
 // conversion of Nip05Names into GRPC type
-impl std::convert::From<Nip05Name> for nauthz_grpc::event_request::Nip05Name {
+impl std::convert::From<Nip05Name> for nauthz_grpc::Nip05Name {
     fn from(value: Nip05Name) -> Self {
-        nauthz_grpc::event_request::Nip05Name {
+        nauthz_grpc::Nip05Name {
             local: value.local.clone(),
             domain: value.domain,
         }
@@ -100,7 +100,7 @@ impl EventAuthzService {
                     origin,
                     user_agent,
                     auth_pubkey,
-                    nip05: nip05.map(nauthz_grpc::event_request::Nip05Name::from),
+                    nip05: nip05.map(nauthz_grpc::Nip05Name::from),
                 })
                 .await?;
             let reply = svr_res.into_inner();
