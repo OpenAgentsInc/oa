@@ -3,7 +3,8 @@
 # Deepseek Test Fixer Script
 # This script uses Deepseek API to analyze and fix failing tests
 
-set -e  # Exit on error
+# Enable debug mode
+set -x
 
 # Configuration
 LOG_FILE="docs/deepseek-fixer-log.md"
@@ -23,13 +24,15 @@ fi
 
 # Function to extract relevant error messages
 extract_errors() {
-    echo "$1" | grep -A 2 "error\[E[0-9]*\]:\|error: \|thread.*panicked" | head -n 30
+    echo "$1" | grep -A 2 "error\[E[0-9]*\]:\|error: \|thread.*panicked\|FAILED" || true
 }
 
 # Function to call Deepseek API
 call_deepseek() {
     local prompt="$1"
     local response
+    
+    echo "Calling Deepseek API..."
     
     response=$(curl -s "https://api.deepseek.com/v1/chat/completions" \
         -H "Content-Type: application/json" \
@@ -40,6 +43,8 @@ call_deepseek() {
             \"temperature\": 0.1,
             \"max_tokens\": 4000
         }")
+    
+    echo "Raw API Response: $response"
     
     if echo "$response" | jq -e '.choices[0].message.content' >/dev/null 2>&1; then
         echo "$response" | jq -r '.choices[0].message.content'
@@ -60,14 +65,18 @@ iteration=1
 while [ $iteration -le $MAX_ITERATIONS ]; do
     echo -e "\n=== Iteration $iteration of $MAX_ITERATIONS ===\n"
     
-    # Run tests
+    # Run tests and capture ALL output
     echo "Running tests..."
     test_output=$(cargo test 2>&1)
     test_exit_code=$?
     
+    echo "Full test output:"
+    echo "$test_output"
+    
     # Process test results
-    echo -e "\nTest errors:"
+    echo -e "\nExtracting test errors..."
     error_output=$(extract_errors "$test_output")
+    echo "Extracted errors:"
     echo "$error_output"
     
     if [ $test_exit_code -eq 0 ]; then
@@ -75,7 +84,13 @@ while [ $iteration -le $MAX_ITERATIONS ]; do
         exit 0
     fi
 
+    if [ -z "$error_output" ]; then
+        echo "No error output found but tests failed. Using full test output..."
+        error_output="$test_output"
+    fi
+
     # Get project hierarchy
+    echo "Reading hierarchy file..."
     hierarchy_content=$(cat docs/hierarchy.md)
 
     # Get files to examine
@@ -89,6 +104,8 @@ $hierarchy_content
 
 Return ONLY a JSON array of file paths that need to be examined to fix these errors. Example: [\"src/file1.rs\",\"src/file2.rs\"]. Return ONLY the JSON array.")
 
+    echo "Received files_json: $files_json"
+
     # Parse files or fallback to error messages
     if ! files_array=($(echo "$files_json" | jq -r '.[]' 2>/dev/null)); then
         echo "Using files from error messages..."
@@ -96,6 +113,16 @@ Return ONLY a JSON array of file paths that need to be examined to fix these err
     fi
 
     echo -e "\nFiles to examine: ${files_array[*]}"
+    
+    if [ ${#files_array[@]} -eq 0 ]; then
+        echo "No files found to examine. Trying to extract from full test output..."
+        mapfile -t files_array < <(echo "$test_output" | grep -o 'src/[^:]*' | sort -u)
+        
+        if [ ${#files_array[@]} -eq 0 ]; then
+            echo "Still no files found. Examining default locations..."
+            files_array=("src/lib.rs" "src/main.rs")
+        fi
+    fi
     
     # Process each file
     for file in "${files_array[@]}"; do
@@ -109,6 +136,7 @@ Return ONLY a JSON array of file paths that need to be examined to fix these err
         file_content=$(cat "$file")
         
         # Check if file needs changes
+        echo "Asking Deepseek about necessary changes..."
         response=$(call_deepseek "You are a Rust expert. Given this file:
 
 $file_content
@@ -121,6 +149,8 @@ Does this file need changes to fix the failing tests? If yes, provide the comple
 
 Format your response to start with either 'CHANGES:' followed by the new content, or 'NO_CHANGES_NEEDED'.")
         
+        echo "Received response from Deepseek: $response"
+        
         if [[ "$response" == NO_CHANGES_NEEDED* ]]; then
             echo "No changes needed for $file"
             continue
@@ -132,6 +162,8 @@ Format your response to start with either 'CHANGES:' followed by the new content
             
             # Get explanation
             explanation=$(call_deepseek "Explain in one line what changes were made to $file and why they fix the failing tests.")
+            
+            echo "Change explanation: $explanation"
             
             # Log changes
             {
