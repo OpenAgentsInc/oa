@@ -5,7 +5,7 @@
 
 # Configuration
 LOG_FILE="docs/deepseek-fixer-log.md"
-MAX_ITERATIONS=5
+MAX_ITERATIONS=500
 
 # Check if DEEPSEEK_API_KEY is set
 if [ -z "${DEEPSEEK_API_KEY}" ]; then
@@ -41,7 +41,7 @@ extract_files() {
 call_deepseek() {
     local prompt="$1"
     local response
-    
+
     response=$(curl -s "https://api.deepseek.com/v1/chat/completions" \
         -H "Content-Type: application/json" \
         -H "Authorization: Bearer $DEEPSEEK_API_KEY" \
@@ -51,7 +51,7 @@ call_deepseek() {
             \"temperature\": 0.1,
             \"max_tokens\": 4000
         }")
-    
+
     if echo "$response" | jq -e '.choices[0].message.content' >/dev/null 2>&1; then
         echo "$response" | jq -r '.choices[0].message.content'
     else
@@ -71,15 +71,15 @@ iteration=1
 while [ $iteration -le $MAX_ITERATIONS ]; do
     echo -e "\n=== Iteration $iteration of $MAX_ITERATIONS ===\n"
     echo -e "\n## Iteration $iteration of $MAX_ITERATIONS\n" >> "$LOG_FILE"
-    
+
     # Run tests
     echo "Running tests..."
     test_output=$(cargo test 2>&1)
     test_exit_code=$?
-    
+
     # Process test results
     error_output=$(extract_errors "$test_output")
-    
+
     if [ $test_exit_code -eq 0 ]; then
         echo "All tests passing! Exiting..."
         echo "\n✅ All tests passing!" >> "$LOG_FILE"
@@ -111,7 +111,7 @@ Return ONLY a JSON array of file paths that need to be examined to fix these err
     if [ ${#files_array[@]} -eq 0 ]; then
         echo "No files found in errors, checking full output..."
         files_array=($(extract_files "$test_output"))
-        
+
         if [ ${#files_array[@]} -eq 0 ]; then
             echo "No files found. Examining default locations..."
             files_array=("src/lib.rs" "src/main.rs")
@@ -120,20 +120,20 @@ Return ONLY a JSON array of file paths that need to be examined to fix these err
 
     echo -e "\nFiles to examine: ${files_array[*]}"
     echo -e "\nExamining files: ${files_array[*]}\n" >> "$LOG_FILE"
-    
+
     changes_made=0
-    
+
     # Process each file
     for file in "${files_array[@]}"; do
         echo -e "\n### Analyzing $file..." | tee -a "$LOG_FILE"
-        
+
         if [ ! -f "$file" ]; then
             echo "❌ File $file not found, skipping..." | tee -a "$LOG_FILE"
             continue
         fi
-        
+
         file_content=$(cat "$file")
-        
+
         # Check if file needs changes
         echo "Analyzing file for changes..." | tee -a "$LOG_FILE"
         response=$(call_deepseek "You are a Rust expert. Analyze this file and the test failures below.
@@ -150,25 +150,25 @@ IMPORTANT: Your response MUST start with either:
 2. 'CHANGES:' followed by the complete new file content if changes are needed
 
 Do not explain or add any other text. Just start with one of those two options.")
-        
+
         # Debug the response
         echo -e "\nAI Response:" >> "$LOG_FILE"
         echo '```' >> "$LOG_FILE"
         echo "$response" >> "$LOG_FILE"
         echo '```' >> "$LOG_FILE"
-        
+
         if [[ "$response" == NO_CHANGES_NEEDED* ]]; then
             echo "✓ SKIPPING: No changes needed" | tee -a "$LOG_FILE"
             continue
         elif [[ "$response" == CHANGES:* ]]; then
             # Get new content
             new_content="${response#CHANGES:}"
-            
+
             # Get explanation
             explanation=$(call_deepseek "Explain in one line what changes were made to $file and why they fix the failing tests.")
-            
+
             echo "🔨 FIXING: $explanation" | tee -a "$LOG_FILE"
-            
+
             # Log changes
             {
                 echo "Changes:"
@@ -177,12 +177,12 @@ Do not explain or add any other text. Just start with one of those two options."
                 echo '```'
                 echo
             } >> "$LOG_FILE"
-            
+
             # Update file and commit
             echo "$new_content" > "$file"
             git add "$file" "$LOG_FILE"
             git commit -m "fix($file): $explanation" -n
-            
+
             ((changes_made++))
             echo "✅ Changes committed" | tee -a "$LOG_FILE"
         else
@@ -190,13 +190,13 @@ Do not explain or add any other text. Just start with one of those two options."
             echo "Response was: ${response:0:100}..." | tee -a "$LOG_FILE"
         fi
     done
-    
+
     echo -e "\nIteration $iteration summary:" | tee -a "$LOG_FILE"
     echo "- Files examined: ${#files_array[@]}" | tee -a "$LOG_FILE"
     echo "- Changes made: $changes_made" | tee -a "$LOG_FILE"
     echo "- Tests still failing: $test_exit_code" | tee -a "$LOG_FILE"
     echo
-    
+
     if [ $changes_made -eq 0 ]; then
         echo "⚠️ WARNING: No changes were made this iteration!" | tee -a "$LOG_FILE"
         echo "This could mean:"
@@ -204,7 +204,7 @@ Do not explain or add any other text. Just start with one of those two options."
         echo "2. The errors are in dependencies or configuration"
         echo "3. The errors require manual intervention"
     fi
-    
+
     ((iteration++))
 done
 
