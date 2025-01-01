@@ -24,7 +24,9 @@
     ├── production.yaml
   ├── docs
     ├── chat-sharing.md
+    ├── deepseek-changes-history.json
     ├── deepseek-fixer-log-1.md
+    ├── deepseek-fixer-log-2.md
     ├── deepseek-fixer-log.md
     ├── githooks.md
     ├── hierarchy.md
