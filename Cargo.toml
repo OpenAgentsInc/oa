@@ -36,7 +36,13 @@ tracing-bunyan-formatter = "0.3.1"
 serde-aux = "4"
 tracing-log = "0.2.0"
 tracing-actix-web = "0.7"
-secrecy = { version = "0.8", features = ["serde"] }
+secrety = { version = "0.8", features = ["serde"] }
+breez-sdk-liquid = { git = "https://github.com/breez/breez-sdk-liquid", branch = "main" }
+sdk-common = { git = "https://github.com/breez/breez-sdk", rev = "f77208acd34d74b571388889e856444908c59a85", features = ["liquid"] }
 
 [dev-dependencies]
 reqwest = { version = "0.12", features = ["json"] }
+
+# Fix dependency conflicts
+[patch.crates-io]
+getrandom = "=0.2.14"
