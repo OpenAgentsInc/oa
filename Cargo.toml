@@ -47,13 +47,12 @@ futures-util = { version = "0.3.28", default-features = false, features = ["sink
 async-trait = "0.1.80"
 hex = "0.4"
 getrandom = "=0.2.14"
-elements = { version = "0.24.0", features = ["serde"] }
 bitcoin = { version = "0.31.2", features = ["rand", "base64", "rand-std"] }
+elements = { version = "0.24.0", features = ["serde"] }
 boltz-client = { git = "https://github.com/SatoshiPortal/boltz-rust", branch = "trunk" }
 
 [dev-dependencies]
 reqwest = { version = "0.12", features = ["json"] }
 
 [patch.crates-io]
-elements = { git = "https://github.com/ElementsProject/rust-elements", rev = "b3b3a0d00abcf086ea816d3437a83d88264e3e8c" }
-secp256k1-zkp = { git = "https://github.com/BlockstreamResearch/rust-secp256k1-zkp", rev = "60e631c24588a0c9e271badd61959294848c665d" }
+secp256k1-zkp = { git = "https://github.com/BlockstreamResearch/rust-secp256k1-zkp.git", rev = "60e631c24588a0c9e271badd61959294848c665d" }
