@@ -47,12 +47,11 @@ futures-util = { version = "0.3.28", default-features = false, features = ["sink
 async-trait = "0.1.80"
 hex = "0.4"
 getrandom = "=0.2.14"
-# Add secp256k1-zkp with musig feature
-secp256k1-zkp = { git = "https://github.com/BlockstreamResearch/rust-secp256k1-zkp", rev = "60e631c24588a0c9e271badd61959294848c665d", features = ["musig"] }
+elements = { version = "0.24.0", features = ["serde"] }
+bitcoin = { version = "0.31.2", features = ["rand", "base64", "rand-std"] }
 
 [dev-dependencies]
 reqwest = { version = "0.12", features = ["json"] }
 
 [patch.crates-io]
-# Use the same secp256k1-zkp version that Breez SDK uses
 secp256k1-zkp = { git = "https://github.com/BlockstreamResearch/rust-secp256k1-zkp", rev = "60e631c24588a0c9e271badd61959294848c665d" }
