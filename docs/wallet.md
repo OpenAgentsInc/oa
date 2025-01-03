@@ -8,7 +8,7 @@ Integration of Bitcoin Lightning Network wallet functionality using the Breez SD
 ### 1. Wallet Core (Rust)
 ```rust
 // Key structures from Breez SDK
-use breez_sdk_core::{
+use breez_sdk_liquid::{
     BreezServices,
     SendPaymentRequest,
     SendPaymentResponse,
@@ -18,13 +18,20 @@ use breez_sdk_core::{
 };
 ```
 
-### 2. Environment Configuration
+### 2. Dependencies
+```toml
+[dependencies]
+breez-sdk-liquid = { git = "https://github.com/breez/breez-sdk-liquid", branch = "main" }
+sdk-common = { git = "https://github.com/breez/breez-sdk", rev = "f77208acd34d74b571388889e856444908c59a85", features = ["liquid"] }
+```
+
+### 3. Environment Configuration
 ```env
 BREEZ_API_KEY=your_api_key
 ADMIN_API_KEY=your_admin_key  # for securing admin endpoints
 ```
 
-### 3. Database Schema
+### 4. Database Schema
 ```sql
 CREATE TABLE payments (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -40,7 +47,7 @@ CREATE TABLE payments (
 );
 ```
 
-### 4. API Endpoints
+### 5. API Endpoints
 
 #### Admin Payment Endpoint
 ```
@@ -74,7 +81,7 @@ Response:
 }
 ```
 
-### 5. Transaction List UI
+### 6. Transaction List UI
 Simple HTML page following existing site style:
 
 ```html
@@ -111,28 +118,19 @@ Simple HTML page following existing site style:
 
 ## Implementation Steps
 
-1. Add Dependencies
-```toml
-[dependencies]
-breez-sdk-core = { git = "https://github.com/breez/breez-sdk-liquid" }
-```
-
+1. Add Dependencies to Cargo.toml
 2. Initialize Breez SDK with environment config
-
 3. Create Database Migration
 - Add payments table
 - Add indexes for common queries
-
 4. Implement Core Payment Logic
 - Payment processing using Breez SDK
 - Transaction logging
 - Error handling for basic cases
-
 5. Create API Endpoints
 - Simple API key auth middleware
 - Payment endpoint
 - Transaction list endpoint
-
 6. Build Transaction List Page
 - Following existing site style
 - Basic transaction display
