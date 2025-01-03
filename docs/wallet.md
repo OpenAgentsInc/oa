@@ -3,78 +3,163 @@
 ## Overview
 Integration of Bitcoin Lightning Network wallet functionality using the Breez SDK for handling payments and transactions.
 
-## Components
+## Core Components
 
 ### 1. Wallet Core (Rust)
-- Integration with Breez SDK
-- Secure key management
-- Transaction handling
-- Database integration for transaction history
+```rust
+// Key structures from Breez SDK
+use breez_sdk_core::{
+    BreezServices,
+    SendPaymentRequest,
+    SendPaymentResponse,
+    Payment,
+    PaymentDetails,
+    ListPaymentsRequest,
+};
+```
 
-### 2. Admin API Endpoints
-- `POST /api/wallet/pay` - Process Lightning invoice payments
-- `GET /api/wallet/transactions` - Retrieve transaction history
-- `GET /api/wallet/balance` - Get current wallet balance
+### 2. Environment Configuration
+```env
+BREEZ_API_KEY=your_api_key
+ADMIN_API_KEY=your_admin_key  # for securing admin endpoints
+```
 
-### 3. Transaction History Storage
-- PostgreSQL table for storing transaction records
-- Fields:
-  - transaction_id (UUID)
-  - amount_sats (i64)
-  - timestamp (DateTime)
-  - payment_hash (String)
-  - status (enum: Success/Failed)
-  - pseudonymized_recipient (String)
-  - memo (Optional<String>)
+### 3. Database Schema
+```sql
+CREATE TABLE payments (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    payment_hash TEXT NOT NULL,
+    amount_sats BIGINT NOT NULL,
+    timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    status TEXT NOT NULL,  -- Using PaymentState from Breez: Created/Pending/Complete/Failed
+    direction TEXT NOT NULL, -- Incoming/Outgoing
+    bolt11 TEXT,  -- The lightning invoice
+    description TEXT,
+    receiver_pubkey TEXT,  -- pseudonymized identifier
+    metadata JSONB  -- additional payment data
+);
+```
 
-### 4. Transaction List Web Interface
-- Display paginated transaction history
-- Show pseudonymized transaction data
-- Filtering and sorting capabilities
-- Export functionality (optional)
+### 4. API Endpoints
 
-## Security Considerations
-- Admin-only access to payment endpoints
-- Secure storage of wallet credentials
-- Rate limiting on API endpoints
-- Audit logging for all wallet operations
+#### Admin Payment Endpoint
+```
+POST /api/wallet/pay
+Authorization: Bearer {ADMIN_API_KEY}
 
-## Implementation Phases
+{
+    "bolt11": "lnbc...",  // Lightning invoice
+    "description": "Optional payment description"
+}
+```
 
-### Phase 1: Core Integration
-1. Add Breez SDK dependency
-2. Implement wallet initialization
-3. Create database schema for transactions
-4. Basic payment handling
+#### Transaction List Endpoint
+```
+GET /api/wallet/transactions
+Authorization: Bearer {ADMIN_API_KEY}
 
-### Phase 2: API Layer
-1. Implement admin authentication
-2. Create REST endpoints
-3. Add transaction logging
-4. Error handling
+Response:
+{
+    "transactions": [
+        {
+            "id": "uuid",
+            "amount": 1000,  // in sats
+            "timestamp": "2024-01-20T12:00:00Z",
+            "status": "Complete",
+            "direction": "Outgoing",
+            "description": "Payment for service",
+            "receiver": "02abc..."  // first 6 chars of pubkey
+        }
+    ]
+}
+```
 
-### Phase 3: Web Interface
-1. Transaction list page
-2. Admin payment interface
-3. Basic analytics/reporting
+### 5. Transaction List UI
+Simple HTML page following existing site style:
 
-## Open Questions
-- Authentication mechanism for admin access
-- Specific fields to pseudonymize in transaction history
-- Integration points with existing admin interface
-- Monitoring and alerting requirements
-- Backup and recovery procedures
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css" />
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+    <title>OpenAgents - Wallet Transactions</title>
+</head>
+<body>
+    <canvas id="bg"></canvas>
+    <div class="overlay"></div>
+    <div class="container">
+        <div class="card-wrapper">
+            <article class="card">
+                <header class="card-header">
+                    <div class="card-left" aria-hidden="true"></div>
+                    <h2 class="card-title">Lightning Transactions</h2>
+                    <div class="card-right" aria-hidden="true"></div>
+                </header>
+                <section class="card-content">
+                    <div id="transactions"></div>
+                </section>
+            </article>
+        </div>
+    </div>
+    <script src="js/transactions.js"></script>
+</body>
+</html>
+```
 
-## Dependencies
-- Breez SDK
-- PostgreSQL
-- Actix-web (existing)
-- Additional security libraries (TBD)
+## Implementation Steps
+
+1. Add Dependencies
+```toml
+[dependencies]
+breez-sdk-core = { git = "https://github.com/breez/breez-sdk-liquid" }
+```
+
+2. Initialize Breez SDK with environment config
+
+3. Create Database Migration
+- Add payments table
+- Add indexes for common queries
+
+4. Implement Core Payment Logic
+- Payment processing using Breez SDK
+- Transaction logging
+- Error handling for basic cases
+
+5. Create API Endpoints
+- Simple API key auth middleware
+- Payment endpoint
+- Transaction list endpoint
+
+6. Build Transaction List Page
+- Following existing site style
+- Basic transaction display
+- Simple filtering/sorting
+
+## Data Privacy
+- Store minimal required transaction data
+- Pseudonymize receiver information by only showing first 6 chars of pubkey
+- No personal information stored
+- All amounts shown in sats only
+
+## Security
+- API key authentication for admin endpoints
+- Environment variable configuration
+- Rate limiting can be added later if needed
+- No frontend payment functionality - admin API only
 
 ## Next Steps
-1. Finalize security requirements
-2. Set up Breez SDK integration
-3. Create database migrations
-4. Implement core payment logic
-5. Build admin API endpoints
-6. Develop web interface
+1. Set up Breez SDK integration
+2. Create database migration
+3. Implement basic payment endpoint
+4. Add transaction list page
+5. Test with small amounts (~$1 worth of sats)
+
+## Future Considerations
+- Add monitoring/alerts
+- Implement transaction limits
+- Add more detailed error handling
+- Enhance analytics/reporting
+- Add backup procedures
